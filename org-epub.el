@@ -1,5 +1,7 @@
-;; This buffer is for text that is not saved, and for Lisp evaluation.
-;; To create a file, visit it with C-x C-f and enter text in its buffer.
+;; export org mode to epub
+
+;; Copyright (c) 2017 - Mark Meyer
+;; See the COPYING file for license information.
 
 (require 'ox-publish)
 (setq org-publish-project-alist
