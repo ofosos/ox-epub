@@ -21,6 +21,7 @@ Use org-epub like this:
 	 :headline-levels 4
 	 :auto-preamble t
 	 :preparation-function org-epub-publish-finish
+         ;; epub specific - these *MUST* be set
 	 :author "Beer Judge Certification Program"
 	 :publisher "Mark Meyer"
 	 :rights "t.b.d."
