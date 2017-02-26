@@ -252,7 +252,6 @@ Return output file name."
 		(incf (car stack))
 		(unless (> current-level *toclevel*)
 		  (princ "</navPoint>"))))
-;	      (setq current-level (org-element-property :level headline))
 	      (unless (> current-level *toclevel*)
 		(princ
 		 (concat (format "<navPoint class=\"h%d\" id=\"%s-%d\">\n" current-level toc-id-prefix toc-id)
@@ -261,7 +260,6 @@ Return output file name."
 				 (org-publish-resolve-external-link
 				  (concat "* " (org-element-property :raw-value headline))
 								    source-file)))))))
-				 ;(apply 'concat "sec" (mapcar (lambda (num) (format "-%d" num)) (reverse stack)))))))))
 	  (while stack
 	    (pop stack)
 	    (princ "</navPoint>")))))))
