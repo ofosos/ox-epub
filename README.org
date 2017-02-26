@@ -60,3 +60,5 @@ These will eventually be fixed:
 
  - Stylesheets not implemented.
  - Can't have space or anything special in your filenames.
+ - No cover page/art possible
+ - Part headings are not included
