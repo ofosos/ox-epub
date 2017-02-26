@@ -208,6 +208,7 @@ Return output file name."
 						     generated))
 			       (generate-toc file (cdr (car generated))))
 			     files "")))
+    (setq generated (reverse generated))
     (with-current-buffer (find-file (concat target-dir "toc.ncx"))
       (erase-buffer)
       (insert (template-toc-ncx uid toc-depth title toc-nav))
@@ -272,4 +273,4 @@ Return output file name."
 	    (pop stack)
 	    (princ "</navPoint>")))))))
 
-;;; sass-mode.el ends here
+;;; org-epub.el ends here
