@@ -55,5 +55,8 @@ That should give you a working =target.epub= file.
 
 ** Caveats
 
-Stylesheets not implemented.
+These will eventually be fixed:
 
+ - Stylesheets not implemented.
+ - Can't have your =.org= files in subdirectories.
+ - Can't have space or anything special in your filenames.
