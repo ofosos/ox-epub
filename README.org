@@ -17,7 +17,7 @@ Use org-epub like this:
       '(
 
 	("reader-1"
-	 :base-directory "~/org/bjcp/"
+	 :base-directory "~/org-bjcp/"
 	 :base-extension "org"
 	 :publishing-directory "~/bjcp-epub/reader1/"
 	 :recursive t
@@ -58,5 +58,4 @@ That should give you a working =target.epub= file.
 These will eventually be fixed:
 
  - Stylesheets not implemented.
- - Can't have your =.org= files in subdirectories.
  - Can't have space or anything special in your filenames.

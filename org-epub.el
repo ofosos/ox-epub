@@ -197,8 +197,12 @@ Return output file name."
 	 (base-dir (org-publish-property :base-directory project))
 	 (target-dir (org-publish-property :publishing-directory project))
 	 (toc-nav (mapconcat (lambda (file)
-			       (setq generated (cons (cons (gen-descriptor file) (concat (gen-descriptor file) ".html")) generated))
-			       (generate-toc file ))
+			       (setq generated (cons (cons (gen-descriptor file) (concat (unless (seq-empty-p (file-relative-name file base-dir))
+											   (file-relative-name
+												  (file-name-directory file) base-dir))
+											 (file-name-base file) ".html"))
+						     generated))
+			       (generate-toc file (cdr (car generated))))
 			     files "")))
     (with-current-buffer (find-file (concat target-dir "toc.ncx"))
       (erase-buffer)
@@ -225,7 +229,7 @@ Return output file name."
       (save-buffer 0)
       (kill-buffer))))
 
-(defun generate-toc (source-file)
+(defun generate-toc (source-file target-file)
   (let ((buffer (or (find-file source-file) (current-buffer)))
 	(toc-id-prefix (file-name-base source-file))
 	(toc-id 0))
@@ -256,7 +260,7 @@ Return output file name."
 		(princ
 		 (concat (format "<navPoint class=\"h%d\" id=\"%s-%d\">\n" current-level toc-id-prefix toc-id)
 			 (format "<navLabel><text>%s</text></navLabel>\n" (org-html-encode-plain-text (org-element-property :title headline)))
-			 (format "<content src=\"%s#%s\"/>" (concat toc-id-prefix ".html")
+			 (format "<content src=\"%s#%s\"/>" target-file
 				 (org-publish-resolve-external-link
 				  (concat "* " (org-element-property :raw-value headline))
 								    source-file)))))))
