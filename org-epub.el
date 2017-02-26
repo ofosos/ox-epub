@@ -1,11 +1,15 @@
-;; export org mode to epub
+;;; org-epub.el --- Export org mode projects to EPUB
 
 ;; Copyright (c) 2017 - Mark Meyer
-;; See the COPYING file for license information.
+
+;; Author: Mark Meyer <mark@ofosos.org>
+;; URL: http://github.com/ofosos/org-epub
+;; Version: 0.1.0
+
+;; Code goes here
 
 (require 'cl)
 (require 'cl-lib)
-(require 'org)
 (require 'ox-publish)
 (require 'ox-html)
 (require 'org-element)
@@ -267,3 +271,5 @@ Return output file name."
 	  (while stack
 	    (pop stack)
 	    (princ "</navPoint>")))))))
+
+;;; sass-mode.el ends here
