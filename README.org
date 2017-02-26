@@ -63,3 +63,4 @@ These will eventually be fixed:
  - No cover page/art possible
  - Part headings are not included
  - Headline levels are borker
+ - Implement zipping
