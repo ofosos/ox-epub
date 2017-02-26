@@ -1,6 +1,8 @@
 * org-epub
 
-Generate =.epub= files directly from OrgMode.
+Generate =.epub= files directly from OrgMode. This will export EPUB
+version 2, which should give broad compatibility. It should also be
+relatiely easy to convert the resulting =.epub= to a =.mobi= (Kindle).
 
 ** Prerequisites
 
@@ -50,3 +52,8 @@ $ zip -Xur9D target.epub META-INF content.opf toc.ncx *.html
 #+END_EXAMPLE
 
 That should give you a working =target.epub= file.
+
+** Caveats
+
+Stylesheets not implemented.
+
