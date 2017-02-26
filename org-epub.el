@@ -214,7 +214,6 @@ Return output file name."
 	 (base-dir (org-publish-property :base-directory project))
 	 (target-dir (org-publish-property :publishing-directory project))
 	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr *org-epub-contents-alist*)) base-dir))
-;	 (toc-nav "")
 	 (generated (mapcar (lambda (file)
 			      (cons (gen-descriptor file)
 				    (concat (unless (seq-empty-p (file-relative-name file base-dir))
