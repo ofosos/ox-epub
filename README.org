@@ -6,7 +6,8 @@ relatiely easy to convert the resulting =.epub= to a =.mobi= (Kindle).
 
 ** Prerequisites
 
-This depends on OrgMode 9, it won't work on OrgMode 8.
+This depends on Emacs 25 and OrgMode 9, it won't work on OrgMode 8 or
+any version of Emacs before 25.
 
 ** Usage
 
