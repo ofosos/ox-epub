@@ -197,9 +197,6 @@ Return output file name."
 (defun template-mimetype ()
   "application/epub+zip")
 
-(defun org-epub-publish-setup (plist)
-  (setq *org-epub-contents* '()))
-
 (defun org-epub-publish-finish (plist)
   (let* ((generated '())
 	 (project (cons "foo" plist))
