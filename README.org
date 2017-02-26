@@ -4,9 +4,6 @@ Generate =.epub= files directly from OrgMode. This will export EPUB
 version 2, which should give broad compatibility. It should also be
 relatiely easy to convert the resulting =.epub= to a =.mobi= (Kindle).
 
-*Warning:* If you have the same headline twice in your document,
-=org-epub= will do the wrong thing. We'll see, if this is fixable.
-
 ** Prerequisites
 
 This depends on OrgMode 9, it won't work on OrgMode 8.

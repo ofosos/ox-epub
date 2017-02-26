@@ -19,10 +19,22 @@
   '((template . org-epub-template))
   )
 
+(defvar *org-epub-current-file* nil)
+(defvar *org-epub-contents* '())
+
 (defun org-epub-template (contents info)
   "Return complete document string after HTML conversion.
 CONTENTS is the transcoded contents string.  INFO is a plist
 holding export options."
+  (let* ((headlines-raw (org-export-collect-headlines info 2))
+	 (headlines (mapcar (lambda (headline)
+			      (let ((plist (car (cdr headline))))
+				(list
+				 (plist-get plist :raw-value)
+				 *org-epub-current-file*
+				 (plist-get plist :level)
+				 (org-export-get-reference headline info)))) headlines-raw)))
+    (setq *org-epub-contents* (append *org-epub-contents* headlines)))
   (concat
    (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
      (let* ((xml-declaration (plist-get info :html-xml-declaration))
@@ -72,6 +84,7 @@ is the property list for the given project.  PUB-DIR is the
 publishing directory.
 
 Return output file name."
+  (setq *org-epub-current-file* filename)
   (org-publish-org-to 'epub filename
 		      (concat "." (or (plist-get plist :html-extension)
 				      org-html-extension
@@ -184,6 +197,9 @@ Return output file name."
 (defun template-mimetype ()
   "application/epub+zip")
 
+(defun org-epub-publish-setup (plist)
+  (setq *org-epub-contents* '()))
+
 (defun org-epub-publish-finish (plist)
   (let* ((generated '())
 	 (project (cons "foo" plist))
@@ -200,15 +216,15 @@ Return output file name."
 	 (rights (org-publish-property :rights project))
 	 (base-dir (org-publish-property :base-directory project))
 	 (target-dir (org-publish-property :publishing-directory project))
-	 (toc-nav (mapconcat (lambda (file)
-			       (setq generated (cons (cons (gen-descriptor file) (concat (unless (seq-empty-p (file-relative-name file base-dir))
-											   (file-relative-name
-												  (file-name-directory file) base-dir))
-											 (file-name-base file) ".html"))
-						     generated))
-			       (generate-toc file (cdr (car generated))))
-			     files "")))
-    (setq generated (reverse generated))
+	 (toc-nav (generate-toc *org-epub-contents* base-dir))
+;	 (toc-nav "")
+	 (generated (mapcar (lambda (file)
+			      (cons (gen-descriptor file)
+				    (concat (unless (seq-empty-p (file-relative-name file base-dir))
+					      (file-relative-name
+					       (file-name-directory file) base-dir))
+					    (file-name-base file) ".html")))
+			    files)))
     (with-current-buffer (find-file (concat target-dir "toc.ncx"))
       (erase-buffer)
       (insert (template-toc-ncx uid toc-depth title toc-nav))
@@ -232,45 +248,39 @@ Return output file name."
       (erase-buffer)
       (insert (template-mimetype))
       (save-buffer 0)
-      (kill-buffer))))
+      (kill-buffer))
+    (setq *org-epub-contents* '())))
 
-(defun generate-toc (source-file target-file)
-  (let ((buffer (or (find-file source-file) (current-buffer)))
-	(toc-id-prefix (file-name-base source-file))
-	(toc-id 0))
-    (with-current-buffer buffer
-      (with-output-to-string
-	(let ((stack '())
-	      (current-level 0))
-	  (org-element-map (org-element-parse-buffer 'headline nil) 'headline
-	    (lambda (headline)
-	      (incf toc-id)
-	      (cond
-	       ((< current-level (org-element-property :level headline))
-		(push 1 stack)
-		(incf current-level))
-	       ((> current-level (org-element-property :level headline))
-		(unless (> current-level *toclevel*)
-		  (princ "</navPoint>"))
-		(while (> current-level (org-element-property :level headline))
-		  (pop stack)
-		  (incf (car stack))
-		  (decf current-level)
-		  (princ "</navPoint>")))
-	       ((eq current-level (org-element-property :level headline))
-		(incf (car stack))
-		(unless (> current-level *toclevel*)
-		  (princ "</navPoint>"))))
-	      (unless (> current-level *toclevel*)
-		(princ
-		 (concat (format "<navPoint class=\"h%d\" id=\"%s-%d\">\n" current-level toc-id-prefix toc-id)
-			 (format "<navLabel><text>%s</text></navLabel>\n" (org-html-encode-plain-text (org-element-property :title headline)))
-			 (format "<content src=\"%s#%s\"/>" target-file
-				 (org-publish-resolve-external-link
-				  (concat "* " (org-element-property :raw-value headline))
-								    source-file)))))))
-	  (while stack
-	    (pop stack)
-	    (princ "</navPoint>")))))))
+(defun generate-toc (headlines base-dir)
+  (let ((toc-id 0)
+	(current-level 0))
+    (with-output-to-string
+      (mapcar
+       (lambda (headline)
+	 (let* ((title (nth 0 headline))
+		(base (file-name-base (nth 1 headline)))
+		(rel-target (file-relative-name (nth 1 headline) base-dir))
+		(target (concat (file-name-directory rel-target) base ".html"))
+		(level (nth 2 headline))
+		(ref (nth 3 headline)))
+	   (incf toc-id)
+	   (cond
+	    ((< current-level level)
+	     (incf current-level))
+	    ((> current-level level)
+	     (princ "</navPoint>")
+	     (while (> current-level level)
+	       (decf current-level)
+	       (princ "</navPoint>")))
+	    ((eq current-level level)
+	     (princ "</navPoint>")))
+	   (princ
+	    (concat (format "<navPoint class=\"h%d\" id=\"%s-%d\">\n" current-level base toc-id)
+		    (format "<navLabel><text>%s</text></navLabel>\n" (org-html-encode-plain-text title))
+		    (format "<content src=\"%s#%s\"/>" target ref)))))
+       headlines)
+      (while (> current-level 0)
+	(princ "</navPoint>")
+	(decf current-level)))))
 
 ;;; org-epub.el ends here
