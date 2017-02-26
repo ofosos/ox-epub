@@ -4,40 +4,14 @@
 ;; See the COPYING file for license information.
 
 (require 'ox-publish)
-(setq org-publish-project-alist
-      '(
-
-	("bjcp-notes"
-	 :base-directory "~/org/bjcp/"
-	 :base-extension "org"
-	 :publishing-directory "~/bjcp-epub/reader1/"
-	 :recursive t
-	 :publishing-function org-epub-publish-to-epub
-	 :headline-levels 4             ; Just the default for this project.
-	 :auto-preamble t
-	 )
-
-	("bjcp" :components ("bjcp-notes" "org-static"))
-	))
-
-(setq org-html-doctype-alist (cons (cons "xhtml-epub" "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">") org-html-doctype-alist))
-
-(custom-set-variables
- '(org-html-head-include-scripts t)
- '(org-html-head-include-default-style t))
 
 (require 'cl-lib)
 (require 'ox-html)
-
-(unless (assoc "xhtml-epub" org-html-doctype-alist)
-  (add-to-list 'org-html-doctype-alist
-	       (cons "xhtml-epub" "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">")))
 
 (org-export-define-derived-backend 'epub 'html
   :translate-alist
   '((template . org-epub-template))
   )
-
 
 (defun org-epub-template (contents info)
   "Return complete document string after HTML conversion.
@@ -101,26 +75,6 @@ Return output file name."
 (require 'org-element)
 (require 'cl)
 
-(set-buffer (current-buffer))
-
-(insert (with-output-to-string (princ "foobar")))foobar
-(let ((*toclevel* 2))
-  (insert (generate-toc "judge-procedures-manual.html" "judge-procedures-manual.org")))
-
-(defun generate-tocs ()
-  (interactive)
-  (save-excursion
-    (with-current-buffer (get-buffer-create "*epub-toc*")
-      (insert (generate-toc-for-buffers '("judge-procedures-manual.org"))))))
-
-(defun generate-toc-for-buffers (buflis)
-  (let ((*toclevel* 2))
-    (concat
-     (mapcar (lambda (buf)
-	       (with-current-buffer buf
-		 (generate-toc)))
-	     buflis))))
-
 (defvar *toclevel* 2)
 
 (defun gen-filename (filename)
@@ -130,29 +84,6 @@ Return output file name."
   (replace-regexp-in-string "^.+/" ""
 			    (replace-regexp-in-string "\\.org" ""
 						      (replace-regexp-in-string "\\.html" "" filename))))
-
-(setq org-epub-projects
-      '(("reader-one" .
-	 ((base-dir . "/home/mark/org/bjcp/")
-	  (target-dir . "/home/mark/bjcp-epub/reader1/")
-	  (file-list . ("judge-procedures-manual.org" "master-level-sheet.org"))
-	  (author . "Beer Judge Certification Program")
-	  (publisher . "Mark Meyer")
-	  (rights . "t.b.d.")
-	  (toc-depth . 2)
-	  (uid . "http://ofosos.org/bjcp/jpm.epub")
-	  (title . "Beer Judge Prep - Reader 1")
-	  (language . "en")
-	  (subject . "non-fiction beer")
-	  (description . "Beer Judging Prep Class, Reader for Session One")
-	  (date . "2017-01-01")))))
-
-(gen-filename (car (rest (assoc 'file-list (assoc "reader-one" org-epub-projects)))))
-
-(require 'ox-publish)
-(require 'ox-html)
-
-(template-toc-ncx "test" 3 "foobar" "test")
 
 (defun template-toc-ncx (uid toc-depth title toc-nav)
   (concat
@@ -251,7 +182,6 @@ Return output file name."
 (defun template-mimetype ()
   "application/epub+zip")
 
-
 (defun generate-project (name)
   (let* ((project (rest (assoc name org-epub-projects)))
 	 (generated '())
@@ -297,9 +227,6 @@ Return output file name."
       (insert (template-mimetype))
       (save-buffer))))
 
-(org-publish-initialize-cache "epub-project")
-(generate-project "reader-one")
-
 (defun generate-toc (target-file &optional buffer)
   (interactive "p" "b")
   (let ((buffer (or buffer (current-buffer)))
@@ -335,4 +262,3 @@ Return output file name."
 	  (while stack
 	    (pop stack)
 	    (princ "</navPoint>")))))))
-
