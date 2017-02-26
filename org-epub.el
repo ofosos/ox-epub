@@ -20,7 +20,7 @@
   )
 
 (defvar *org-epub-current-file* nil)
-(defvar *org-epub-contents* '())
+(defvar *org-epub-contents-alist* '())
 
 (defun org-epub-template (contents info)
   "Return complete document string after HTML conversion.
@@ -34,7 +34,7 @@ holding export options."
 				 *org-epub-current-file*
 				 (plist-get plist :level)
 				 (org-export-get-reference headline info)))) headlines-raw)))
-    (setq *org-epub-contents* (append *org-epub-contents* headlines)))
+    (setf (alist-get (intern *org-epub-current-file*) *org-epub-contents-alist*) headlines))
   (concat
    (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
      (let* ((xml-declaration (plist-get info :html-xml-declaration))
@@ -216,7 +216,7 @@ Return output file name."
 	 (rights (org-publish-property :rights project))
 	 (base-dir (org-publish-property :base-directory project))
 	 (target-dir (org-publish-property :publishing-directory project))
-	 (toc-nav (generate-toc *org-epub-contents* base-dir))
+	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr *org-epub-contents-alist*)) base-dir))
 ;	 (toc-nav "")
 	 (generated (mapcar (lambda (file)
 			      (cons (gen-descriptor file)
@@ -248,8 +248,7 @@ Return output file name."
       (erase-buffer)
       (insert (template-mimetype))
       (save-buffer 0)
-      (kill-buffer))
-    (setq *org-epub-contents* '())))
+      (kill-buffer))))
 
 (defun generate-toc (headlines base-dir)
   (let ((toc-id 0)
