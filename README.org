@@ -1,3 +1,40 @@
 * org-epub
 
-*Beware:* Presently not usable. 
+** Prerequisites
+
+This depends on OrgMode 9, it won't work on OrgMode 8.
+
+** Usage
+
+Use org-epub like this:
+
+#+BEGIN_EXAMPLE
+(setq org-publish-project-alist
+      '(
+
+	("reader-1"
+	 :base-directory "~/org/bjcp/"
+	 :base-extension "org"
+	 :publishing-directory "~/bjcp-epub/reader1/"
+	 :recursive t
+	 :publishing-function org-epub-publish-to-epub
+	 :headline-levels 4
+	 :auto-preamble t
+	 :preparation-function org-epub-publish-finish
+	 :author "Beer Judge Certification Program"
+	 :publisher "Mark Meyer"
+	 :rights "t.b.d."
+	 :toc-depth 2
+	 :uid "http://ofosos.org/bjcp/jpm.epub"
+	 :title "Beer Judge Prep - Reader 1"
+	 :language "en"
+	 :subject "non-fiction beer"
+	 :description "Beer Judging Prep Class, Reader for Session One"
+	 :epub-date "2017-01-01"
+	 )
+
+	))
+#+END_EXAMPLE
+
+Then =M-x org-publish RET bjcp RET=. Should work reasonably.
+

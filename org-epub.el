@@ -3,10 +3,12 @@
 ;; Copyright (c) 2017 - Mark Meyer
 ;; See the COPYING file for license information.
 
-(require 'ox-publish)
-
+(require 'cl)
 (require 'cl-lib)
+(require 'org)
+(require 'ox-publish)
 (require 'ox-html)
+(require 'org-element)
 
 (org-export-define-derived-backend 'epub 'html
   :translate-alist
@@ -72,8 +74,6 @@ Return output file name."
 				      "html"))
 		      plist pub-dir))
 
-(require 'org-element)
-(require 'cl)
 
 (defvar *toclevel* 2)
 
@@ -168,8 +168,6 @@ Return output file name."
      (concat "<itemref idref=\"" (car file) "\" />\n"))
    files ""))
 
-(gen-spine '(("foo" . "foo.html") ("bar" . "bar.html")))
-
 (defun template-container ()
   "<?xml version=\"1.0\"?>
 <container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">
@@ -182,55 +180,49 @@ Return output file name."
 (defun template-mimetype ()
   "application/epub+zip")
 
-(defun generate-project (name)
-  (let* ((project (rest (assoc name org-epub-projects)))
-	 (generated '())
-	 (files (rest (assoc 'file-list project)))
-	 (uid (rest (assoc 'uid project)))
-	 (toc-depth (or (rest (assoc 'toc-depth project)) 2))
-	 (title (rest (assoc 'title project)))
-	 (language (rest (assoc 'language project)))
-	 (subject (rest (assoc 'subject project)))
-	 (description (rest (assoc 'description project)))
-	 (creator (rest (assoc 'creator project)))
-	 (publisher (rest (assoc 'publisher project)))
-	 (date (rest (assoc 'date project)))
-	 (rights (rest (assoc 'rights project)))
-	 (base-dir (rest (assoc 'base-dir project)))
-	 (target-dir (rest (assoc 'target-dir project)))
-	 (project '("foobar" :base-directory "~/org/bjcp/"
-				    :base-extension "org"
-				    :publishing-directory "~/bjcp-epub/reader1/"
-				    :recursive t
-				    :publishing-function org-epub-publish-to-epub
-				    :headline-levels 4             ; Just the default for this project.
-				    :auto-preamble t))
+(defun org-epub-publish-finish (plist)
+  (let* ((generated '())
+	 (project (cons "foo" plist))
+	 (files (org-publish-get-base-files project))
+	 (uid (org-publish-property :uid project))
+	 (toc-depth (or (org-publish-property :toc-depth project) 2))
+	 (title (org-publish-property :title project))
+	 (language (org-publish-property :language project))
+	 (subject (org-publish-property :subject project))
+	 (description (org-publish-property :description project))
+	 (creator (org-publish-property :creator project))
+	 (publisher (org-publish-property :publisher project))
+	 (date (org-publish-property :epub-date project))
+	 (rights (org-publish-property :rights project))
+	 (base-dir (org-publish-property :base-directory project))
+	 (target-dir (org-publish-property :publishing-directory project))
 	 (toc-nav (mapconcat (lambda (file)
-			       (org-epub-publish-to-epub project (concat base-dir file) target-dir)
 			       (setq generated (cons (cons (gen-descriptor file) (concat (gen-descriptor file) ".html")) generated))
-				 (generate-toc (concat (gen-descriptor file) ".html")
-					       (find-file (concat base-dir file))))
+			       (generate-toc file ))
 			     files "")))
     (with-current-buffer (find-file (concat target-dir "toc.ncx"))
       (insert (template-toc-ncx uid toc-depth title toc-nav))
-      (save-buffer))
+      (save-buffer)
+      (kill-buffer))
     (with-current-buffer (find-file (concat target-dir "content.opf"))
       (insert (template-content-opf title language uid subject description creator publisher date rights
 				    (gen-manifest generated)
-				    (gen-spine generated)))
-      (save-buffer))
+     				    (gen-spine generated)))
+      (save-buffer)
+      (kill-buffer))
     (with-current-buffer (find-file (concat target-dir "META-INF/container.xml"))
-      (insert (gen-container))
+      (insert (template-container))
       (make-directory (concat target-dir "META-INF"))
-      (save-buffer))
+      (save-buffer)
+      (kill-buffer))
     (with-current-buffer (find-file (concat target-dir "mimetype"))
       (insert (template-mimetype))
-      (save-buffer))))
+      (save-buffer)
+      (kill-buffer))))
 
-(defun generate-toc (target-file &optional buffer)
-  (interactive "p" "b")
-  (let ((buffer (or buffer (current-buffer)))
-	(toc-id-prefix target-file)
+(defun generate-toc (source-file)
+  (let ((buffer (or (find-file source-file) (current-buffer)))
+	(toc-id-prefix (file-name-base source-file))
 	(toc-id 0))
     (with-current-buffer buffer
       (with-output-to-string
@@ -257,8 +249,11 @@ Return output file name."
 		(princ
 		 (concat (format "<navPoint class=\"h%d\" id=\"%s-%d\">\n" current-level toc-id-prefix toc-id)
 			 (format "<navLabel><text>%s</text></navLabel>\n" (org-element-property :title headline))
-			 (format "<content src=\"%s#%s\"/>" target-file
-				 (apply 'concat "sec" (mapcar (lambda (num) (format "-%d" num)) (reverse stack)))))))))
+			 (format "<content src=\"%s#%s\"/>" (concat toc-id-prefix ".html")
+				 (org-publish-resolve-external-link
+				  (concat "* " (org-element-property :raw-value headline))
+								    source-file)))))))
+				 ;(apply 'concat "sec" (mapcar (lambda (num) (format "-%d" num)) (reverse stack)))))))))
 	  (while stack
 	    (pop stack)
 	    (princ "</navPoint>")))))))
