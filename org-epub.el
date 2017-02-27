@@ -34,7 +34,8 @@ holding export options."
 				 *org-epub-current-file*
 				 (plist-get plist :level)
 				 (org-export-get-reference headline info)))) headlines-raw)))
-    (setf (alist-get (intern *org-epub-current-file*) *org-epub-contents-alist*) headlines))
+    (setf (alist-get (intern *org-epub-current-file*) *org-epub-contents-alist*) headlines)
+    (org-publish-cache-set "org-epub-headlines" *org-epub-contents-alist*))
   (concat
    (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
      (let* ((xml-declaration (plist-get info :html-xml-declaration))
@@ -202,7 +203,7 @@ Return output file name."
 	 (rights (org-publish-property :rights project))
 	 (base-dir (org-publish-property :base-directory project))
 	 (target-dir (org-publish-property :publishing-directory project))
-	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr *org-epub-contents-alist*)) base-dir))
+	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr (org-publish-cache-get "org-epub-headlines"))) base-dir))
 	 (generated (mapcar (lambda (file)
 			      (cons (file-name-base file)
 				    (concat (unless (seq-empty-p (file-relative-name file base-dir))
