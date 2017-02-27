@@ -46,14 +46,8 @@ Use org-epub like this:
 Then =M-x org-publish RET bjcp RET=. Should work reasonably.
 
 After that you'll have an output directory with all the important
-files. Change to that directory:
-
-#+BEGIN_EXAMPLE
-$ zip -X0 target.epub mimetype
-$ zip -Xur9D target.epub META-INF content.opf toc.ncx *.html
-#+END_EXAMPLE
-
-That should give you a working =target.epub= file.
+files. The final EPUB file will be the file you specified as
+=:epub-file ...=.
 
 ** Caveats
 
