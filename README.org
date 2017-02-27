@@ -64,4 +64,5 @@ These will eventually be fixed:
  - No cover page/art possible
  - Part headings are not included
  - Headline levels are borken
- - Implement zipping
+ - The assumption that your org-mode files end in `.org' is hardcoded
+   everywhere.
