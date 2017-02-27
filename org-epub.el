@@ -1,4 +1,4 @@
-;;; org-epub.el --- Export org mode projects to EPUB
+;;; org-epub.el --- Export org mode projects to EPUB -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2017 - Mark Meyer
 
@@ -8,7 +8,6 @@
 
 ;; Code goes here
 
-(require 'cl)
 (require 'cl-lib)
 (require 'ox-publish)
 (require 'ox-html)
