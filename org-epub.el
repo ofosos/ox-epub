@@ -10,6 +10,8 @@
 
 ;; Version: 0.1.0
 
+;; Package-Requires: ((emacs "25"))
+
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -25,18 +27,18 @@
 
 ;;; Commentary:
 
-;; This is an addition to the standard org-mode exporters. The package
-;; extends the (X)HTML exporter to produce EPUB files. It eliminates
-;; all inline CSS and JavaScript to accomplish this. This exporter
+;; This is an addition to the standard org-mode exporters.  The package
+;; extends the (X)HTML exporter to produce EPUB files.  It eliminates
+;; all inline CSS and JavaScript to accomplish this.  This exporter
 ;; will also tie the XHTML DTD to XHTML 1.1, a concrete DTD specifier
 ;; that was not supported by ox-html previously.
 
 ;; The main part is the generation of the table of contents in machine
 ;; readable form, as well as the spine, which defines the order in
-;; which files are presented. A lesser part is the inclusion of
+;; which files are presented.  A lesser part is the inclusion of
 ;; various metadata properties, among them authorship and rights.
 
-;;; Code goes here
+;;; Code:
 
 (require 'cl-lib)
 (require 'ox-publish)
@@ -48,8 +50,10 @@
   '((template . org-epub-template))
   )
 
-(defvar *org-epub-current-file* nil)
-(defvar *org-epub-contents-alist* '())
+(defvar *org-epub-current-file* nil
+  "The current file we're exporting.")
+(defvar *org-epub-contents-alist* '()
+  "All headlines accessible by file.")
 
 (defun org-epub-template (contents info)
   "Return complete document string after HTML conversion.
@@ -122,9 +126,14 @@ Return output file name."
 		      plist pub-dir))
 
 (defun template-toc-ncx (uid toc-depth title toc-nav)
+  "Create the toc.ncx file.
+
+UID is the uid/url of the file.  TOC-DEPTH is the depth of the toc
+that should be shown to the readers.  TITLE is the title of the
+ebook and TOC-NAV being the raw contents enclosed in navMap."
   (concat
    "<?xml version=\"1.0\"?>
-<!DOCTYPE ncx PUBLIC \"-//NISO//DTD ncx 2005-1//EN\" 
+<!DOCTYPE ncx PUBLIC \"-//NISO//DTD ncx 2005-1//EN\"
    \"http://www.daisy.org/z3986/2005/ncx-2005-1.dtd\">
 
 <ncx xmlns=\"http://www.daisy.org/z3986/2005/ncx/\" version=\"2005-1\">
@@ -152,10 +161,25 @@ Return output file name."
 </ncx>"))
 
 (defun template-content-opf (title language uid subject description creator publisher date rights manifest spine cover)
+  "Create the content.opf file.
+
+The following metadata is included in the content.opf: TITLE is
+the title of the ebook, LANGUAGE is the language, UID is the
+uid/url of the ebook, SUBJECT is the theme of the book in
+keywords, DESCRIPTION is a longer free form description, CREATOR
+is the author, PUBLISHER identifies the publisher, DATE is the
+date of publication, RIGHTS signifies the copyrights.
+
+The following arguments are XML strings: MANIFEST is the content
+inside the manifest tags, this should include all user generated
+html files but not things like the cover page, SPINE is an XML
+string with the list of html files in reading order.
+
+Finally COVER is the cover image filename."
   (concat
    "<?xml version=\"1.0\"?>
 
-<package xmlns=\"http://www.idpf.org/2007/opf\" unique-identifier=\"dcidid\" 
+<package xmlns=\"http://www.idpf.org/2007/opf\" unique-identifier=\"dcidid\"
    version=\"2.0\">
 
    <metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\"
@@ -167,7 +191,7 @@ Return output file name."
       <dc:identifier id=\"dcidid\" opf:scheme=\"URI\">"
       uid
          "</dc:identifier>
-      <dc:subject>" subject 
+      <dc:subject>" subject
          "</dc:subject>
       <dc:description>" description
 
@@ -192,7 +216,7 @@ Return output file name."
    "</manifest>
 
    <spine toc=\"ncx\">
-     <itemref idref=\"cover\" linear=\"no\" />" 
+     <itemref idref=\"cover\" linear=\"no\" />"
    spine
 
    "</spine>
@@ -204,6 +228,9 @@ Return output file name."
 </package>"))
 
 (defun gen-manifest (files)
+  "Generate the manifest XML string.
+
+FILES is the list of files to be included in the manifest."
   (mapconcat
    (lambda (file)
      (concat "<item id=\"" (car file) "\"      href=\"" (rest file) "\"
@@ -211,12 +238,17 @@ Return output file name."
    files ""))
 
 (defun gen-spine (files)
+  "Generate the spine XML string.
+
+FILES is the list of files to be included in the spine, these
+must be in reading order."
   (mapconcat
    (lambda (file)
      (concat "<itemref idref=\"" (car file) "\" />\n"))
    files ""))
 
 (defun template-container ()
+  "Generate the container.xml file, the root of any EPUB."
   "<?xml version=\"1.0\"?>
 <container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">
    <rootfiles>
@@ -226,6 +258,10 @@ Return output file name."
 </container>")
 
 (defun template-cover (cover-file width height)
+  "Generate a HTML template for the cover page.
+
+COVER-FILE is the filename of a jpeg file, while WIDTH and HEIGHT are
+properties of the image."
    (concat "<?xml version=\"1.0\" encoding=\"utf-8\"?>
  <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">
  
@@ -243,9 +279,14 @@ Return output file name."
  </html>"))
 
 (defun template-mimetype ()
+  "Generate the mimetype file for the epub."
   "application/epub+zip")
 
 (defun org-epub-publish-finish (plist)
+  "Finish the generation of the EPUB.
+
+This function is usually called, when all HTML files have
+finished exporting.  PLIST is the project property list."
   (let* ((generated '())
 	 (project (cons "foo" plist))
 	 (files (org-publish-get-base-files project))
@@ -306,6 +347,13 @@ Return output file name."
     (epub-zip-it-up epub files base-dir target-dir cover)))
 
 (defun epub-zip-it-up (epub-file files base-dir target-dir cover)
+  "Create the .epub file by zipping up the contents.
+
+EPUB-FILE is the target filename, FILES is the list of source
+files to process, BASE-DIR is the base dir of the source files
+while TARGET-DIR is the directory where exported HTML files
+live.  COVER is the filename of the cover image, which may be
+nil."
   (let ((default-directory target-dir)
 	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
     (call-process "zip" nil '(:file "zip.log") nil
@@ -321,6 +369,10 @@ Return output file name."
 						       (file-relative-name file base-dir))) files)))))
 
 (defun generate-toc (headlines base-dir)
+  "Generate the toc/navMap entries for the toc.ncx file.
+
+HEADLINES are the headlines to include in the toc, while BASE-DIR
+is the base dir where the source files for the project live."
   (let ((toc-id 0)
 	(current-level 0))
     (with-output-to-string
