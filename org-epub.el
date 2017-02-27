@@ -4,10 +4,39 @@
 
 ;; Author: Mark Meyer <mark@ofosos.org>
 ;; Maintainer: Mark Meyer <mark@ofosos.org>
+
 ;; URL: http://github.com/ofosos/org-epub
+;; Keywords: hypermedia
+
 ;; Version: 0.1.0
 
-;; Code goes here
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This is an addition to the standard org-mode exporters. The package
+;; extends the (X)HTML exporter to produce EPUB files. It eliminates
+;; all inline CSS and JavaScript to accomplish this. This exporter
+;; will also tie the XHTML DTD to XHTML 1.1, a concrete DTD specifier
+;; that was not supported by ox-html previously.
+
+;; The main part is the generation of the table of contents in machine
+;; readable form, as well as the spine, which defines the order in
+;; which files are presented. A lesser part is the inclusion of
+;; various metadata properties, among them authorship and rights.
+
+;;; Code goes here
 
 (require 'cl-lib)
 (require 'ox-publish)
