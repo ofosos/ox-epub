@@ -3,6 +3,7 @@
 ;; Copyright (c) 2017 - Mark Meyer
 
 ;; Author: Mark Meyer <mark@ofosos.org>
+;; Maintainer: Mark Meyer <mark@ofosos.org>
 ;; URL: http://github.com/ofosos/org-epub
 ;; Version: 0.1.0
 
