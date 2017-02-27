@@ -109,6 +109,7 @@ holding export options."
    ;; Closing document.
    "</body>\n</html>"))
 
+;;;###autoload
 (defun org-epub-publish-to-epub (plist filename pub-dir)
   "Publish an org file to epub.
 
@@ -281,6 +282,7 @@ properties of the image."
   "Generate the mimetype file for the epub."
   "application/epub+zip")
 
+;;;###autoload
 (defun org-epub-publish-finish (plist)
   "Finish the generation of the EPUB.
 
