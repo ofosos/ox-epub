@@ -4,6 +4,10 @@ Generate =.epub= files directly from OrgMode. This will export EPUB
 version 2, which should give broad compatibility. It should also be
 relatiely easy to convert the resulting =.epub= to a =.mobi= (Kindle).
 
+*Warning:* Currently the results of the table of contents is not
+correctly cache, so please do a full rebuild of your export, if you
+want to have a correct table of contents.
+
 ** Prerequisites
 
 This depends on Emacs 25 and OrgMode 9, it won't work on OrgMode 8 or
