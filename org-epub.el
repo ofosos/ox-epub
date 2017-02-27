@@ -52,8 +52,6 @@
 
 (defvar *org-epub-current-file* nil
   "The current file we're exporting.")
-(defvar *org-epub-contents-alist* '()
-  "All headlines accessible by file.")
 
 (defun org-epub-template (contents info)
   "Return complete document string after HTML conversion.
@@ -66,9 +64,10 @@ holding export options."
 				 (plist-get plist :raw-value)
 				 *org-epub-current-file*
 				 (plist-get plist :level)
-				 (org-export-get-reference headline info)))) headlines-raw)))
-    (setf (alist-get (intern *org-epub-current-file*) *org-epub-contents-alist*) headlines)
-    (org-publish-cache-set "org-epub-headlines" *org-epub-contents-alist*))
+				 (org-export-get-reference headline info)))) headlines-raw))
+	 (cache (org-publish-cache-get "org-epub-headlines")))
+    (setf (alist-get (intern *org-epub-current-file*) cache) headlines)
+    (org-publish-cache-set "org-epub-headlines" cache))
   (concat
    (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
      (let* ((xml-declaration (plist-get info :html-xml-declaration))
