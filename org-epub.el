@@ -403,4 +403,6 @@ is the base dir where the source files for the project live."
 	(princ "</navPoint>")
 	(decf current-level)))))
 
+(provide 'org-epub)
+
 ;;; org-epub.el ends here
