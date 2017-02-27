@@ -383,14 +383,14 @@ is the base dir where the source files for the project live."
 		(target (concat (file-name-directory rel-target) base ".html"))
 		(level (nth 2 headline))
 		(ref (nth 3 headline)))
-	   (incf toc-id)
+	   (cl-incf toc-id)
 	   (cond
 	    ((< current-level level)
-	     (incf current-level))
+	     (cl-incf current-level))
 	    ((> current-level level)
 	     (princ "</navPoint>")
 	     (while (> current-level level)
-	       (decf current-level)
+	       (cl-decf current-level)
 	       (princ "</navPoint>")))
 	    ((eq current-level level)
 	     (princ "</navPoint>")))
@@ -401,7 +401,7 @@ is the base dir where the source files for the project live."
        headlines)
       (while (> current-level 0)
 	(princ "</navPoint>")
-	(decf current-level)))))
+	(cl-decf current-level)))))
 
 (provide 'org-epub)
 
