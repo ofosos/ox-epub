@@ -91,9 +91,6 @@ Return output file name."
 				      "html"))
 		      plist pub-dir))
 
-
-(defvar *toclevel* 2)
-
 (defun template-toc-ncx (uid toc-depth title toc-nav)
   (concat
    "<?xml version=\"1.0\"?>
