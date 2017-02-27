@@ -232,7 +232,7 @@ Finally COVER is the cover image filename."
 FILES is the list of files to be included in the manifest."
   (mapconcat
    (lambda (file)
-     (concat "<item id=\"" (car file) "\"      href=\"" (rest file) "\"
+     (concat "<item id=\"" (car file) "\"      href=\"" (cdr file) "\"
             media-type=\"application/xhtml+xml\" />\n"))
    files ""))
 
