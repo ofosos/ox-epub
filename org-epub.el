@@ -231,6 +231,7 @@ Return output file name."
 	 (date (org-publish-property :epub-date project))
 	 (rights (org-publish-property :rights project))
 	 (base-dir (org-publish-property :base-directory project))
+	 (epub (org-publish-property :epub-file project))
 	 (target-dir (org-publish-property :publishing-directory project))
 	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr (org-publish-cache-get "org-epub-headlines"))) base-dir))
 	 (generated (mapcar (lambda (file)
@@ -263,7 +264,23 @@ Return output file name."
       (erase-buffer)
       (insert (template-mimetype))
       (save-buffer 0)
-      (kill-buffer))))
+      (kill-buffer))
+    (epub-zip-it-up epub files base-dir target-dir)))
+
+(defun epub-zip-it-up (epub-file files base-dir target-dir)
+  (let ((default-directory target-dir)
+	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
+    (call-process "zip" nil '(:file "zip.log") nil
+		  "-Xu0"
+		  epub-file
+		  "mimetype")
+    (apply 'call-process "zip" nil '(:file "zip.log") nil
+	   "-Xu9"
+	   epub-file
+	   (append meta-files
+		   (mapcar (lambda (file)
+			     (replace-regexp-in-string "\\.org" ".html"
+						       (file-relative-name file base-dir))) files)))))
 
 (defun generate-toc (headlines base-dir)
   (let ((toc-id 0)

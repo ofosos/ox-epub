@@ -27,6 +27,7 @@ Use org-epub like this:
 	 :auto-preamble t
 	 :preparation-function org-epub-publish-finish
          ;; epub specific - these *MUST* be set
+	 :epub-file "bjcp.epub"
 	 :author "Beer Judge Certification Program"
 	 :publisher "Mark Meyer"
 	 :rights "t.b.d."
