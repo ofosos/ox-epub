@@ -94,14 +94,6 @@ Return output file name."
 
 (defvar *toclevel* 2)
 
-(defun gen-filename (filename)
-  (replace-regexp-in-string "\\.org" ".html" filename))
-
-(defun gen-descriptor (filename)
-  (replace-regexp-in-string "^.+/" ""
-			    (replace-regexp-in-string "\\.org" ""
-						      (replace-regexp-in-string "\\.html" "" filename))))
-
 (defun template-toc-ncx (uid toc-depth title toc-nav)
   (concat
    "<?xml version=\"1.0\"?>
@@ -215,7 +207,7 @@ Return output file name."
 	 (target-dir (org-publish-property :publishing-directory project))
 	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr *org-epub-contents-alist*)) base-dir))
 	 (generated (mapcar (lambda (file)
-			      (cons (gen-descriptor file)
+			      (cons (file-name-base file)
 				    (concat (unless (seq-empty-p (file-relative-name file base-dir))
 					      (file-relative-name
 					       (file-name-directory file) base-dir))
