@@ -10,7 +10,7 @@
 
 ;; Version: 0.1.0
 
-;; Package-Requires: ((emacs "25"))
+;; Package-Requires: ((emacs "25") (org "9"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@
   '((template . org-epub-template))
   )
 
-(defvar *org-epub-current-file* nil
+(defvar org-epub-current-file* nil
   "The current file we're exporting.")
 
 (defun org-epub-template (contents info)
@@ -124,7 +124,7 @@ Return output file name."
 				      "html"))
 		      plist pub-dir))
 
-(defun template-toc-ncx (uid toc-depth title toc-nav)
+(defun org-epub-template-toc-ncx (uid toc-depth title toc-nav)
   "Create the toc.ncx file.
 
 UID is the uid/url of the file.  TOC-DEPTH is the depth of the toc
@@ -159,7 +159,7 @@ ebook and TOC-NAV being the raw contents enclosed in navMap."
    "</navMap>
 </ncx>"))
 
-(defun template-content-opf (title language uid subject description creator publisher date rights manifest spine cover)
+(defun org-epub-template-content-opf (title language uid subject description creator publisher date rights manifest spine cover)
   "Create the content.opf file.
 
 The following metadata is included in the content.opf: TITLE is
@@ -226,7 +226,7 @@ Finally COVER is the cover image filename."
 
 </package>"))
 
-(defun gen-manifest (files)
+(defun org-epub-gen-manifest (files)
   "Generate the manifest XML string.
 
 FILES is the list of files to be included in the manifest."
@@ -236,7 +236,7 @@ FILES is the list of files to be included in the manifest."
             media-type=\"application/xhtml+xml\" />\n"))
    files ""))
 
-(defun gen-spine (files)
+(defun org-epub-gen-spine (files)
   "Generate the spine XML string.
 
 FILES is the list of files to be included in the spine, these
@@ -246,7 +246,7 @@ must be in reading order."
      (concat "<itemref idref=\"" (car file) "\" />\n"))
    files ""))
 
-(defun template-container ()
+(defun org-epub-template-container ()
   "Generate the container.xml file, the root of any EPUB."
   "<?xml version=\"1.0\"?>
 <container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\">
@@ -256,7 +256,7 @@ must be in reading order."
    </rootfiles>
 </container>")
 
-(defun template-cover (cover-file width height)
+(defun org-epub-template-cover (cover-file width height)
   "Generate a HTML template for the cover page.
 
 COVER-FILE is the filename of a jpeg file, while WIDTH and HEIGHT are
@@ -277,7 +277,7 @@ properties of the image."
  </body>
  </html>"))
 
-(defun template-mimetype ()
+(defun org-epub-template-mimetype ()
   "Generate the mimetype file for the epub."
   "application/epub+zip")
 
@@ -305,7 +305,7 @@ finished exporting.  PLIST is the project property list."
 	 (cover-height (org-publish-property :epub-cover-height project))
 	 (cover-width (org-publish-property :epub-cover-width project))
 	 (target-dir (org-publish-property :publishing-directory project))
-	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr (org-publish-cache-get "org-epub-headlines"))) base-dir))
+	 (toc-nav (org-epub-generate-toc (apply 'append (mapcar 'cdr (org-publish-cache-get "org-epub-headlines"))) base-dir))
 	 (generated (mapcar (lambda (file)
 			      (cons (file-name-base file)
 				    (concat (unless (seq-empty-p (file-relative-name file base-dir))
@@ -315,37 +315,37 @@ finished exporting.  PLIST is the project property list."
 			    files)))
     (with-current-buffer (find-file (concat target-dir "toc.ncx"))
       (erase-buffer)
-      (insert (template-toc-ncx uid toc-depth title toc-nav))
+      (insert (org-epub-template-toc-ncx uid toc-depth title toc-nav))
       (save-buffer 0)
       (kill-buffer))
     (when cover
       (with-current-buffer (find-file (concat target-dir "cover.html"))
 	(erase-buffer)
-	(insert (template-cover cover cover-width cover-height))
+	(insert (org-epub-template-cover cover cover-width cover-height))
 	(save-buffer 0)
 	(kill-buffer)))
     (with-current-buffer (find-file (concat target-dir "content.opf"))
       (erase-buffer)
-      (insert (template-content-opf title language uid subject description creator publisher date rights
-				    (gen-manifest generated)
-     				    (gen-spine generated) cover))
+      (insert (org-epub-template-content-opf title language uid subject description creator publisher date rights
+				    (org-epub-gen-manifest generated)
+     				    (org-epub-gen-spine generated) cover))
       (save-buffer 0)
       (kill-buffer))
     (with-current-buffer (find-file (concat target-dir "META-INF/container.xml"))
       (erase-buffer)
-      (insert (template-container))
+      (insert (org-epub-template-container))
       (unless (file-exists-p (concat target-dir "META-INF"))
 	(make-directory (concat target-dir "META-INF")))
       (save-buffer 0)
       (kill-buffer))
     (with-current-buffer (find-file (concat target-dir "mimetype"))
       (erase-buffer)
-      (insert (template-mimetype))
+      (insert (org-epub-template-mimetype))
       (save-buffer 0)
       (kill-buffer))
-    (epub-zip-it-up epub files base-dir target-dir cover)))
+    (org-epub-zip-it-up epub files base-dir target-dir cover)))
 
-(defun epub-zip-it-up (epub-file files base-dir target-dir cover)
+(defun org-epub-zip-it-up (epub-file files base-dir target-dir cover)
   "Create the .epub file by zipping up the contents.
 
 EPUB-FILE is the target filename, FILES is the list of source
@@ -367,7 +367,7 @@ nil."
 			     (replace-regexp-in-string "\\.org" ".html"
 						       (file-relative-name file base-dir))) files)))))
 
-(defun generate-toc (headlines base-dir)
+(defun org-epub-generate-toc (headlines base-dir)
   "Generate the toc/navMap entries for the toc.ncx file.
 
 HEADLINES are the headlines to include in the toc, while BASE-DIR
