@@ -151,7 +151,7 @@ Return output file name."
    "</navMap>
 </ncx>"))
 
-(defun template-content-opf (title language uid subject description creator publisher date rights manifest spine)
+(defun template-content-opf (title language uid subject description creator publisher date rights manifest spine cover)
   (concat
    "<?xml version=\"1.0\"?>
 
@@ -175,20 +175,32 @@ Return output file name."
       <dc:creator>" creator "</dc:creator>
       <dc:publisher>" publisher "</dc:publisher>
       <dc:date xsi:type=\"dcterms:W3CDTF\">" date "</dc:date>
-      <dc:rights>" rights "</dc:rights>
+      <dc:rights>" rights "</dc:rights>"
+      (when cover
+	"<meta name=\"cover\" content=\"cover-image\"/>")
+      "
    </metadata>
 
-   <manifest>
-      <item id=\"ncx\"      href=\"toc.ncx\"
+   <manifest>\n"
+      (when cover
+	(concat "<item id=\"cover\" href=\"cover.html\" media-type=\"application/xhtml+xml\"/>
+         <item id=\"cover-image\" href=\"" cover "\" media-type=\"image/jpeg\"/>"))
+      "<item id=\"ncx\"      href=\"toc.ncx\"
          media-type=\"application/x-dtbncx+xml\" />"
       manifest
       
    "</manifest>
 
-   <spine toc=\"ncx\">"
+   <spine toc=\"ncx\">
+     <itemref idref=\"cover\" linear=\"no\" />" 
    spine
 
    "</spine>
+
+ <guide>
+ <reference type=\"cover\" href=\"cover.html\" />
+ </guide>
+
 </package>"))
 
 (defun gen-manifest (files)
@@ -213,6 +225,23 @@ Return output file name."
    </rootfiles>
 </container>")
 
+(defun template-cover (cover-file width height)
+   (concat "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+ <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">
+ 
+ <html xmlns=\"http://www.w3.org/1999/xhtml\">
+ <head>
+ <title></title>
+ </head>
+ 
+ <body>
+ <svg version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"
+  width=\"100%\" height=\"100%\" viewBox=\"0 0 573 800\" preserveAspectRatio=\"xMidYMid meet\">
+ <image xlink:href=\"" cover-file "\" height=\"" (format "%d" height) "\" width=\"" (format "%d" width) "\" />
+ </svg>
+ </body>
+ </html>"))
+
 (defun template-mimetype ()
   "application/epub+zip")
 
@@ -232,6 +261,9 @@ Return output file name."
 	 (rights (org-publish-property :rights project))
 	 (base-dir (org-publish-property :base-directory project))
 	 (epub (org-publish-property :epub-file project))
+	 (cover (org-publish-property :epub-cover project))
+	 (cover-height (org-publish-property :epub-cover-height project))
+	 (cover-width (org-publish-property :epub-cover-width project))
 	 (target-dir (org-publish-property :publishing-directory project))
 	 (toc-nav (generate-toc (apply 'append (mapcar 'cdr (org-publish-cache-get "org-epub-headlines"))) base-dir))
 	 (generated (mapcar (lambda (file)
@@ -246,11 +278,17 @@ Return output file name."
       (insert (template-toc-ncx uid toc-depth title toc-nav))
       (save-buffer 0)
       (kill-buffer))
+    (when cover
+      (with-current-buffer (find-file (concat target-dir "cover.html"))
+	(erase-buffer)
+	(insert (template-cover cover cover-width cover-height))
+	(save-buffer 0)
+	(kill-buffer)))
     (with-current-buffer (find-file (concat target-dir "content.opf"))
       (erase-buffer)
       (insert (template-content-opf title language uid subject description creator publisher date rights
 				    (gen-manifest generated)
-     				    (gen-spine generated)))
+     				    (gen-spine generated) cover))
       (save-buffer 0)
       (kill-buffer))
     (with-current-buffer (find-file (concat target-dir "META-INF/container.xml"))
@@ -265,9 +303,9 @@ Return output file name."
       (insert (template-mimetype))
       (save-buffer 0)
       (kill-buffer))
-    (epub-zip-it-up epub files base-dir target-dir)))
+    (epub-zip-it-up epub files base-dir target-dir cover)))
 
-(defun epub-zip-it-up (epub-file files base-dir target-dir)
+(defun epub-zip-it-up (epub-file files base-dir target-dir cover)
   (let ((default-directory target-dir)
 	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
     (call-process "zip" nil '(:file "zip.log") nil
@@ -277,7 +315,7 @@ Return output file name."
     (apply 'call-process "zip" nil '(:file "zip.log") nil
 	   "-Xu9"
 	   epub-file
-	   (append meta-files
+	   (append meta-files (when cover (list cover "cover.html"))
 		   (mapcar (lambda (file)
 			     (replace-regexp-in-string "\\.org" ".html"
 						       (file-relative-name file base-dir))) files)))))
