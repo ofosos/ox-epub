@@ -50,7 +50,7 @@
   '((template . org-epub-template))
   )
 
-(defvar org-epub-current-file* nil
+(defvar org-epub-current-file nil
   "The current file we're exporting.")
 
 (defun org-epub-template (contents info)
@@ -62,11 +62,11 @@ holding export options."
 			      (let ((plist (car (cdr headline))))
 				(list
 				 (plist-get plist :raw-value)
-				 *org-epub-current-file*
+				 org-epub-current-file
 				 (plist-get plist :level)
 				 (org-export-get-reference headline info)))) headlines-raw))
 	 (cache (org-publish-cache-get "org-epub-headlines")))
-    (setf (alist-get (intern *org-epub-current-file*) cache) headlines)
+    (setf (alist-get (intern org-epub-current-file) cache) headlines)
     (org-publish-cache-set "org-epub-headlines" cache))
   (concat
    (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
@@ -118,7 +118,7 @@ is the property list for the given project.  PUB-DIR is the
 publishing directory.
 
 Return output file name."
-  (setq *org-epub-current-file* filename)
+  (setq org-epub-current-file filename)
   (org-publish-org-to 'epub filename
 		      (concat "." (or (plist-get plist :html-extension)
 				      org-html-extension
