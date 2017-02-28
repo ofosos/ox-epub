@@ -67,7 +67,8 @@ holding export options."
 				 (org-export-get-reference headline info)))) headlines-raw))
 	 (cache (org-publish-cache-get "org-epub-headlines")))
     (setf (alist-get (intern org-epub-current-file) cache) headlines)
-    (org-publish-cache-set "org-epub-headlines" cache))
+    (org-publish-cache-set "org-epub-headlines" cache)
+    (org-publish-write-cache-file))
   (concat
    (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
      (let* ((xml-declaration (plist-get info :html-xml-declaration))
@@ -306,7 +307,10 @@ finished exporting.  PLIST is the project property list."
 	 (cover-height (org-publish-property :epub-cover-height project))
 	 (cover-width (org-publish-property :epub-cover-width project))
 	 (target-dir (org-publish-property :publishing-directory project))
+	 (project-name (org-publish-cache-get ":project:"))
+	 (org-publish-cache (org-publish-initialize-cache project-name))
 	 (toc-nav (org-epub-generate-toc (apply 'append (mapcar 'cdr (org-publish-cache-get "org-epub-headlines"))) base-dir))
+
 	 (generated (mapcar (lambda (file)
 			      (cons (file-name-base file)
 				    (concat (unless (seq-empty-p (file-relative-name file base-dir))
