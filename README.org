@@ -17,7 +17,7 @@ Use org-epub like this:
 (setq org-publish-project-alist
       '(
 
-	("reader-1"
+	("reader-1-html"
 	 :base-directory "~/org-bjcp/"
 	 :base-extension "org"
 	 :publishing-directory "~/bjcp-epub/reader1/"
@@ -40,10 +40,16 @@ Use org-epub like this:
 	 :language "en"
 	 :subject "non-fiction beer"
 	 :description "Beer Judging Prep Class, Reader for Session One"
-	 :epub-date "2017-01-01"
-	 )
+	 :epub-date "2017-01-01")
 
-	))
+	 ("reader-1-static"
+	  :base-directory "~/org-bjcp/"
+	  :base-extension "jpg"
+	  :publishing-directory "~/bjcp-epub/reader1/"
+	  :recursive t
+	  :publishing-function org-publish-attachment)
+
+	 ("reader-1" :components ("reader-1-html" "reader-1-static"))))
 #+END_EXAMPLE
 
 Then =M-x org-publish RET bjcp RET=. Should work reasonably.
