@@ -44,6 +44,7 @@
 (require 'ox-publish)
 (require 'ox-html)
 (require 'org-element)
+(require 'seq)
 
 (org-export-define-derived-backend 'epub 'html
   :translate-alist
