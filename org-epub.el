@@ -288,8 +288,7 @@ properties of the image."
 
 This function is usually called, when all HTML files have
 finished exporting.  PLIST is the project property list."
-  (let* ((generated '())
-	 (project (cons "foo" plist))
+  (let* ((project (cons "foo" plist))
 	 (files (org-publish-get-base-files project))
 	 (uid (org-publish-property :uid project))
 	 (toc-depth (or (org-publish-property :toc-depth project) 2))
@@ -377,7 +376,7 @@ is the base dir where the source files for the project live."
   (let ((toc-id 0)
 	(current-level 0))
     (with-output-to-string
-      (mapcar
+      (mapc
        (lambda (headline)
 	 (let* ((title (nth 0 headline))
 		(base (file-name-base (nth 1 headline)))
