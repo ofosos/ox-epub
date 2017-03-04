@@ -1,4 +1,4 @@
-* org-epub
+* ox-epub
 
 Generate =.epub= files directly from OrgMode. This will export EPUB
 version 2, which should give broad compatibility. It should also be
@@ -11,7 +11,7 @@ any version of Emacs before 25.
 
 ** Usage
 
-Use org-epub like this:
+Use ox-epub like this:
 
 #+BEGIN_EXAMPLE
 (setq org-publish-project-alist
@@ -60,7 +60,7 @@ files. The final EPUB file will be the file you specified as
 
 ** Features
 
-Currently =org-epub= can do the following:
+Currently =ox-epub= can do the following:
 
  - simple cover images
  - direct =.epub= generation

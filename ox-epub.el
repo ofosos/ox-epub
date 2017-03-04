@@ -1,4 +1,4 @@
-;;; org-epub.el --- Export org mode projects to EPUB -*- lexical-binding: t; -*-
+;;; ox-epub.el --- Export org mode projects to EPUB -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2017 - Mark Meyer
 
@@ -408,6 +408,6 @@ is the base dir where the source files for the project live."
 	(princ "</navPoint>")
 	(cl-decf current-level)))))
 
-(provide 'org-epub)
+(provide 'ox-epub)
 
 ;;; org-epub.el ends here
