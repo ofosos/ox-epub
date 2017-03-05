@@ -411,4 +411,4 @@ is the base dir where the source files for the project live."
 
 (provide 'ox-epub)
 
-;;; org-epub.el ends here
+;;; ox-epub.el ends here
