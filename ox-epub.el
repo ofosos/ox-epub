@@ -66,7 +66,7 @@ holding export options."
 				 (plist-get plist :level)
 				 (org-export-get-reference headline info)))) headlines-raw))
 	 (cache (org-publish-cache-get "org-epub-headlines")))
-    (setf (cdr (assq (intern org-epub-current-file) cache) headlines))
+    (setf (cdr (assq (intern org-epub-current-file) cache)) headlines)
     (org-publish-cache-set "org-epub-headlines" cache)
     (org-publish-write-cache-file))
   (concat
