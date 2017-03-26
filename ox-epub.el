@@ -10,7 +10,7 @@
 
 ;; Version: 0.1.0
 
-;; Package-Requires: ((emacs "25") (org "9"))
+;; Package-Requires: ((emacs "24") (org "9"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -44,7 +44,6 @@
 (require 'ox-publish)
 (require 'ox-html)
 (require 'org-element)
-(require 'seq)
 
 (org-export-define-derived-backend 'epub 'html
   :translate-alist
@@ -67,7 +66,7 @@ holding export options."
 				 (plist-get plist :level)
 				 (org-export-get-reference headline info)))) headlines-raw))
 	 (cache (org-publish-cache-get "org-epub-headlines")))
-    (setf (alist-get (intern org-epub-current-file) cache) headlines)
+    (setf (cdr (assq (intern org-epub-current-file) cache) headlines))
     (org-publish-cache-set "org-epub-headlines" cache)
     (org-publish-write-cache-file))
   (concat
@@ -314,7 +313,7 @@ finished exporting.  PLIST is the project property list."
 
 	 (generated (mapcar (lambda (file)
 			      (cons (file-name-base file)
-				    (concat (unless (seq-empty-p (file-relative-name file base-dir))
+				    (concat (unless (org-string-nw-p (file-relative-name file base-dir))
 					      (file-relative-name
 					       (file-name-directory file) base-dir))
 					    (file-name-base file) ".html")))
