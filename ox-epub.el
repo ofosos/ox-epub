@@ -173,7 +173,7 @@ holding export options."
       (save-buffer 0)
       (kill-buffer))
     (org-epub-zip-it-up2 outfile '("body.html") org-epub-zip-dir nil)
-    (copy-file outfile ))
+    (expand-file-name outfile)))
 
 ;;;###autoload
 (defun org-epub-publish-to-epub (plist filename pub-dir)
@@ -455,7 +455,8 @@ nil."
 	   "-Xu9"
 	   epub-file
 	   (append meta-files (when cover (list cover "cover.html"))
-		   files))))
+		   files)))
+  (copy-file (concat target-dir epub-file) default-directory))
 
 ;; FIXME
 (defun org-epub-generate-toc-single (headlines filename)
