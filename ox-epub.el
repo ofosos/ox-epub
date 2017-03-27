@@ -196,7 +196,7 @@ the property list for the export process."
       (insert body)
       (save-buffer 0)
       (kill-buffer))
-    (org-epub-zip-it-up2 outfile '("body.html") org-epub-zip-dir nil)
+    (org-epub-zip-it-up outfile '("body.html") org-epub-zip-dir nil)
     (expand-file-name outfile)))
 
 ;;;###autoload
@@ -372,96 +372,7 @@ properties of the image."
   "Generate the mimetype file for the epub."
   "application/epub+zip")
 
-;;;###autoload
-(defun org-epub-publish-finish (plist)
-  "Finish the generation of the EPUB.
-
-This function is usually called, when all HTML files have
-finished exporting.  PLIST is the project property list."
-  (let* ((project (cons "foo" plist))
-	 (files (org-publish-get-base-files project))
-	 (uid (org-publish-property :uid project))
-	 (toc-depth (or (org-publish-property :toc-depth project) 2))
-	 (title (org-publish-property :title project))
-	 (language (org-publish-property :language project))
-	 (subject (org-publish-property :subject project))
-	 (description (org-publish-property :description project))
-	 (creator (org-publish-property :creator project))
-	 (publisher (org-publish-property :publisher project))
-	 (date (org-publish-property :epub-date project))
-	 (rights (org-publish-property :rights project))
-	 (base-dir (org-publish-property :base-directory project))
-	 (epub (org-publish-property :epub-file project))
-	 (cover (org-publish-property :epub-cover project))
-	 (cover-height (org-publish-property :epub-cover-height project))
-	 (cover-width (org-publish-property :epub-cover-width project))
-	 (target-dir (org-publish-property :publishing-directory project))
-	 (project-name (org-publish-cache-get ":project:"))
-	 (org-publish-cache (org-publish-initialize-cache project-name))
-	 (toc-nav (org-epub-generate-toc (apply 'append (mapcar 'cdr (org-publish-cache-get "org-epub-headlines"))) base-dir))
-
-	 (generated (mapcar (lambda (file)
-			      (cons (file-name-base file)
-				    (concat (unless (org-string-nw-p (file-relative-name file base-dir))
-					      (file-relative-name
-					       (file-name-directory file) base-dir))
-					    (file-name-base file) ".html")))
-			    files)))
-    (with-current-buffer (find-file (concat target-dir "toc.ncx"))
-      (erase-buffer)
-      (insert (org-epub-template-toc-ncx uid toc-depth title toc-nav))
-      (save-buffer 0)
-      (kill-buffer))
-    (when cover
-      (with-current-buffer (find-file (concat target-dir "cover.html"))
-	(erase-buffer)
-	(insert (org-epub-template-cover cover cover-width cover-height))
-	(save-buffer 0)
-	(kill-buffer)))
-    (with-current-buffer (find-file (concat target-dir "content.opf"))
-      (erase-buffer)
-      (insert (org-epub-template-content-opf title language uid subject description creator publisher date rights
-				    (org-epub-gen-manifest generated)
-     				    (org-epub-gen-spine generated) cover))
-      (save-buffer 0)
-      (kill-buffer))
-    (with-current-buffer (find-file (concat target-dir "META-INF/container.xml"))
-      (erase-buffer)
-      (insert (org-epub-template-container))
-      (unless (file-exists-p (concat target-dir "META-INF"))
-	(make-directory (concat target-dir "META-INF")))
-      (save-buffer 0)
-      (kill-buffer))
-    (with-current-buffer (find-file (concat target-dir "mimetype"))
-      (erase-buffer)
-      (insert (org-epub-template-mimetype))
-      (save-buffer 0)
-      (kill-buffer))
-    (org-epub-zip-it-up epub files base-dir target-dir cover)))
-
-(defun org-epub-zip-it-up (epub-file files base-dir target-dir cover)
-  "Create the .epub file by zipping up the contents.
-
-EPUB-FILE is the target filename, FILES is the list of source
-files to process, BASE-DIR is the base dir of the source files
-while TARGET-DIR is the directory where exported HTML files
-live.  COVER is the filename of the cover image, which may be
-nil."
-  (let ((default-directory target-dir)
-	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
-    (call-process "zip" nil '(:file "zip.log") nil
-		  "-Xu0"
-		  epub-file
-		  "mimetype")
-    (apply 'call-process "zip" nil '(:file "zip.log") nil
-	   "-Xu9"
-	   epub-file
-	   (append meta-files (when cover (list cover "cover.html"))
-		   (mapcar (lambda (file)
-			     (replace-regexp-in-string "\\.org" ".html"
-						       (file-relative-name file base-dir))) files)))))
-
-(defun org-epub-zip-it-up2 (epub-file files target-dir cover)
+(defun org-epub-zip-it-up (epub-file files target-dir cover)
   "Create the .epub file by zipping up the contents.
 
 EPUB-FILE is the target filename, FILES is the list of source
@@ -514,8 +425,8 @@ information. The name of the target file is given by FILENAME."
       (while (> current-level 0)
 	(princ "</navPoint>")
 	(cl-decf current-level)))))
-  
 
+;; rewrite on top of single
 (defun org-epub-generate-toc (headlines base-dir)
   "Generate the toc/navMap entries for the toc.ncx file.
 

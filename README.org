@@ -6,63 +6,22 @@ relatiely easy to convert the resulting =.epub= to a =.mobi= (Kindle).
 
 ** Prerequisites
 
-This depends on Emacs 25 and OrgMode 9, it won't work on OrgMode 8 or
-any version of Emacs before 25.
+This depends on Emacs 24.3 and OrgMode 9, it won't work on OrgMode 8 or
+any version of Emacs before 24.3.
+
+** Installation
+
+=M-x package-install RET ox-epub RET=
 
 ** Usage
 
-Use ox-epub like this:
-
-#+BEGIN_EXAMPLE
-(setq org-publish-project-alist
-      '(
-
-	("reader-B-html"
-	 :base-directory "~/bjcp-reader-1/"
-	 :base-extension "org"
-	 :publishing-directory "~/bjcp-epub/readerZ/"
-	 :recursive t
-	 :publishing-function org-epub-publish-to-epub
-	 :headline-levels 4
-	 :auto-preamble t
-	 :preparation-function org-epub-publish-finish
-         ;; epub specific - these *MUST* be set
-	 :epub-file "bjcp.epub"
-	 :epub-cover "bjcp.jpg"
-	 :epub-cover-width 800
-	 :epub-cover-height 600
-	 :author "Beer Judge Certification Program"
-	 :publisher "Mark Meyer"
-	 :rights "t.b.d."
-	 :toc-depth 2
-	 :uid "http://ofosos.org/bjcp/jpm.epub"
-	 :title "Beer Judge Prep - Reader 1"
-	 :language "en"
-	 :subject "non-fiction beer"
-	 :description "Beer Judging Prep Class, Reader for Session One"
-	 :epub-date "2017-01-01")
-
-	 ("reader-1-static"
-	  :base-directory "~/bjcp-reader-1/"
-	  :base-extension "jpg"
-	  :publishing-directory "~/bjcp-epub/readerZ/"
-	  :recursive t
-	  :publishing-function org-publish-attachment)
-
-	 ("reader-1" :components ("reader-B-html" "reader-1-static"))))
-#+END_EXAMPLE
-
-Then =M-x org-publish RET bjcp RET=. Should work reasonably.
-
-After that you'll have an output directory with all the important
-files. The final EPUB file will be the file you specified as
-=:epub-file ...=.
+Hit =C-c C-e E e= to publish the current buffer to an EPUB.
 
 ** Features
 
 Currently =ox-epub= can do the following:
 
- - simple cover images
+ - simple cover images (broken)
  - direct =.epub= generation
 
 ** Caveats
@@ -70,8 +29,3 @@ Currently =ox-epub= can do the following:
 These will eventually be fixed:
 
  - Stylesheets not implemented.
- - Can't have space or anything special in your filenames.
- - Part headings are not included
- - Headline levels are borken
- - The assumption that your org-mode files end in `.org' is hardcoded
-   everywhere.
