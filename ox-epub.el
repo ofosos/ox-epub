@@ -149,6 +149,12 @@ holding export options."
 
 ;;compare org-export-options-alist
 (defun org-epub-export-to-epub (&optional async subtreep visible-only ext-plist)
+  "Export the current buffer to an EPUB file.
+
+ASYNC defines wether this process should run in the background,
+SUBTREEP supports narrowing of the document, VISIBLE-ONLY allows
+you to export only visible parts of the document, EXT-PLIST is
+the property list for the export process."
   (interactive)
   (let* ((outfile (org-export-output-file-name ".epub" subtreep))
 	 (out-file-type (file-name-extension outfile))
@@ -441,10 +447,9 @@ nil."
   "Create the .epub file by zipping up the contents.
 
 EPUB-FILE is the target filename, FILES is the list of source
-files to process, BASE-DIR is the base dir of the source files
-while TARGET-DIR is the directory where exported HTML files
-live.  COVER is the filename of the cover image, which may be
-nil."
+files to process, while TARGET-DIR is the directory where
+exported HTML files live.  COVER is the filename of the cover
+image, which may be nil."
   (let ((default-directory target-dir)
 	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
     (call-process "zip" nil '(:file "zip.log") nil
@@ -456,10 +461,13 @@ nil."
 	   epub-file
 	   (append meta-files (when cover (list cover "cover.html"))
 		   files)))
-  (copy-file (concat target-dir epub-file) default-directory))
+  (copy-file (concat target-dir epub-file) default-directory))o
 
-;; FIXME
 (defun org-epub-generate-toc-single (headlines filename)
+  "Generate a single file TOC.
+
+HEADLINES is a list containing the abbreviated headline
+information. The name of the target file is given by FILENAME."
   (let ((toc-id 0)
 	(current-level 0))
     (with-output-to-string
