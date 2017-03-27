@@ -479,7 +479,7 @@ image, which may be nil."
 	   epub-file
 	   (append meta-files (when cover (list cover "cover.html"))
 		   files)))
-  (copy-file (concat target-dir epub-file) default-directory))o
+  (copy-file (concat target-dir epub-file) default-directory t))
 
 (defun org-epub-generate-toc-single (headlines filename)
   "Generate a single file TOC.
