@@ -59,9 +59,6 @@
   '(?E "Export to Epub"
        ((?e "As Epub file" org-epub-export-to-epub))))
 
-(defvar org-epub-current-file nil
-  "The current file we're exporting.")
-
 (defvar org-epub-zip-dir nil
   "The temporary directory to export to")
 
@@ -74,7 +71,6 @@ holding export options."
 				       (let ((plist (car (cdr headline))))
 					 (list
 					  (plist-get plist :raw-value)
-					  org-epub-current-file
 					  (plist-get plist :level)
 					  (org-export-get-reference headline info)))) headlines-raw)))
     ;; options: uid (:epub-uid), title (:title), language (:language),
@@ -389,9 +385,8 @@ information. The name of the target file is given by FILENAME."
       (mapc
        (lambda (headline)
 	 (let* ((title (nth 0 headline))
-		(base (file-name-base (nth 1 headline)))
-		(level (nth 2 headline))
-		(ref (nth 3 headline)))
+		(level (nth 1 headline))
+		(ref (nth 2 headline)))
 	   (cl-incf toc-id)
 	   (cond
 	    ((< current-level level)
@@ -404,7 +399,7 @@ information. The name of the target file is given by FILENAME."
 	    ((eq current-level level)
 	     (princ "</navPoint>")))
 	   (princ
-	    (concat (format "<navPoint class=\"h%d\" id=\"%s-%d\">\n" current-level base toc-id)
+	    (concat (format "<navPoint class=\"h%d\" id=\"%s-%d\">\n" current-level filename toc-id)
 		    (format "<navLabel><text>%s</text></navLabel>\n" (org-html-encode-plain-text title))
 		    (format "<content src=\"%s#%s\"/>" filename ref)))))
        headlines)
