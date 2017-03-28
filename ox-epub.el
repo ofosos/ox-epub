@@ -54,13 +54,38 @@
     (:epub-rights "License" nil nil t))
     
   :translate-alist
-  '((template . org-epub-template))
+  '((template . org-epub-template)
+    (link . org-epub-link))
   :menu-entry
   '(?E "Export to Epub"
        ((?e "As Epub file" org-epub-export-to-epub))))
 
 (defvar org-epub-zip-dir nil
   "The temporary directory to export to")
+
+(defvar org-epub-image-counter 0
+  "Counter for the exported images")
+
+(defvar org-epub-image-list nil
+  "List of images that need to be included in the EPUB")
+
+(defun org-epub-link (link desc info)
+  (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
+    (org-epub-include-image link))
+  (org-html-link link desc info))
+
+(defun org-epub-include-image (link)
+  (let* ((path (org-element-property :path link))
+	 (number (cl-incf org-epub-image-counter))
+	 (new-path (concat "./images/" (format "%i.%s" number (file-name-extension path)))))
+    (when (eq number 1)
+      (make-directory (concat org-epub-zip-dir "images/") t))
+    (push new-path org-epub-image-list)
+    (copy-file (concat default-directory path) (concat org-epub-zip-dir new-path) t)
+    (org-element-put-property link :path new-path)))
+
+(defun org-epub-nameify (str)
+  (replace-regexp-in-string "^[-]*" "" (replace-regexp-in-string "[/\\.]" "-" str)))
 
 (defun org-epub-template (contents info)
   "Return complete document string after HTML conversion.
@@ -76,15 +101,15 @@ holding export options."
     ;; options: uid (:epub-uid), title (:title), language (:language),
     ;; subject (:epub-subject), description (:epub-description), creator
     ;; (:creator), publisher, date (:date), rights (:epub-rights)
-    (let ((uid (plist-get info :epub-uid))
-	  (title (plist-get info :title))
-	  (language (plist-get info :language))
-	  (subject (plist-get info :epub-subject))
-	  (description (plist-get info :epub-description))
-	  (creator (plist-get info :creator))
-	  (publisher (plist-get info :epub-publisher))
-	  (date (plist-get info :date))
-	  (rights (plist-get info :epub-rights)))
+    (let ((uid (org-export-data (plist-get info :epub-uid) info))
+	  (title (org-export-data (plist-get info :title) info))
+	  (language (org-export-data (plist-get info :language) info))
+	  (subject (org-export-data (plist-get info :epub-subject) info))
+	  (description (org-export-data (plist-get info :epub-description) info))
+	  (author (org-export-data (plist-get info :author) info))
+	  (publisher (org-export-data (plist-get info :epub-publisher) info))
+	  (date (org-export-data (plist-get info :date) info))
+	  (rights (org-export-data (plist-get info :epub-rights) info)))
       ;; maybe set toc-depth "2" to some dynamic value
       (with-current-buffer (find-file (concat org-epub-zip-dir "toc.ncx"))
 	(erase-buffer)
@@ -95,8 +120,15 @@ holding export options."
       ;; insert cover export
       (with-current-buffer (find-file (concat org-epub-zip-dir "content.opf"))
 	(erase-buffer)
-	(insert (org-epub-template-content-opf title language uid subject description creator publisher date rights
-					       (org-epub-gen-manifest '(("body-html" . "body.html")))
+	(insert (org-epub-template-content-opf title language uid subject description author publisher date rights
+					       (org-epub-gen-manifest (append
+								       '(("body-html" "body.html" "application/xhtml+xml"))
+								       (mapcar
+									(lambda (el)
+									  (list (org-epub-nameify el)
+										el
+										(concat "image/" (file-name-extension el))))
+									org-epub-image-list)))
 					       (org-epub-gen-spine '(("body-html" . "body.html"))) nil)) ;; FIXME cover
 	(save-buffer 0)
 	(kill-buffer))))
@@ -173,6 +205,8 @@ the property list for the export process."
   (interactive)
   (let* ((outfile (org-export-output-file-name ".epub" subtreep))
 	 (out-file-type (file-name-extension outfile))
+	 (org-epub-image-counter 0)
+	 (org-epub-image-list nil)
 	 (org-epub-zip-dir (file-name-as-directory
 			    (make-temp-file (format "%s-" out-file-type) t)))
 	 (body (org-export-as 'epub subtreep visible-only nil ext-plist)))
@@ -287,14 +321,18 @@ Finally COVER is the cover image filename."
       
    "</manifest>
 
-   <spine toc=\"ncx\">
-     <itemref idref=\"cover\" linear=\"no\" />"
+   <spine toc=\"ncx\">"
+   (when cover
+     "<itemref idref=\"cover\" linear=\"no\" />")
+   
    spine
 
    "</spine>
 
- <guide>
- <reference type=\"cover\" href=\"cover.html\" />
+ <guide>"
+   (when cover
+     " <reference type=\"cover\" href=\"cover.html\" />")
+   "
  </guide>
 
 </package>"))
@@ -305,8 +343,8 @@ Finally COVER is the cover image filename."
 FILES is the list of files to be included in the manifest."
   (mapconcat
    (lambda (file)
-     (concat "<item id=\"" (car file) "\"      href=\"" (cdr file) "\"
-            media-type=\"application/xhtml+xml\" />\n"))
+     (concat "<item id=\"" (car file) "\"      href=\"" (second file) "\"
+            media-type=\"" (third file) "\" />\n"))
    files ""))
 
 (defun org-epub-gen-spine (files)
@@ -371,7 +409,7 @@ image, which may be nil."
 	   "-Xu9"
 	   epub-file
 	   (append meta-files (when cover (list cover "cover.html"))
-		   files)))
+		   files org-epub-image-list)))
   (copy-file (concat target-dir epub-file) default-directory t))
 
 (defun org-epub-generate-toc-single (headlines filename)
