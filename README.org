@@ -24,6 +24,19 @@ There are some required export options that need to be set. These are
  - =AUTHOR= the document author
  - =TITLE= the document title
 
+Furthermore there are some properties which are optional:
+
+ - =Subject= the subject matter of the book
+ - =Description= a description of the book
+ - =Publisher= the publisher of the book
+ - =License= the license associated with this book
+
+The only other option that is exported:
+
+ - =LANGUAGE= the language of the book
+
+*** TODO check syntax of language org vs. epub.
+
 ** Features
 
 Currently =ox-epub= can do the following:
