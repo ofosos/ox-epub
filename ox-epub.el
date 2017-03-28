@@ -197,6 +197,7 @@ the property list for the export process."
       (save-buffer 0)
       (kill-buffer))
     (org-epub-zip-it-up outfile '("body.html") org-epub-zip-dir nil)
+    (message "Generated %s" outfile)
     (expand-file-name outfile)))
 
 ;;;###autoload
