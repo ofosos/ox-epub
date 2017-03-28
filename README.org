@@ -17,6 +17,13 @@ any version of Emacs before 24.3.
 
 Hit =C-c C-e E e= to publish the current buffer to an EPUB.
 
+There are some required export options that need to be set. These are
+
+ - =UID= a unique id of the document, otherwise known as uri, may be a url
+ - =DATE= the date of the document, see [[https://www.w3.org/TR/NOTE-datetime]]
+ - =AUTHOR= the document author
+ - =TITLE= the document title
+
 ** Features
 
 Currently =ox-epub= can do the following:
