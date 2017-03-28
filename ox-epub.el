@@ -93,11 +93,10 @@ CONTENTS is the transcoded contents string.  INFO is a plist
 holding export options."
   (let* ((headlines-raw (org-export-collect-headlines info 2))
 	 (headlines (mapcar (lambda (headline)
-				       (let ((plist (car (cdr headline))))
-					 (list
-					  (plist-get plist :raw-value)
-					  (plist-get plist :level)
-					  (org-export-get-reference headline info)))) headlines-raw)))
+			      (list
+			       (org-element-property :raw-value headline)
+			       (org-element-property :level headline)
+			       (org-export-get-reference headline info))) headlines-raw)))
     ;; options: uid (:epub-uid), title (:title), language (:language),
     ;; subject (:epub-subject), description (:epub-description), creator
     ;; (:creator), publisher, date (:date), rights (:epub-rights)
