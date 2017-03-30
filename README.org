@@ -40,8 +40,6 @@ The only other option that is exported:
    [[https://www.ietf.org/rfc/rfc3066.txt]], no other interpretations are
    allowed according to the EPUB spec.
 
-*** TODO check syntax of language org vs. epub.
-
 ** Features
 
 Currently =ox-epub= can do the following:
