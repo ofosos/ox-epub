@@ -237,21 +237,22 @@
 "
   "Default style declarations for org epub")
 
-(defvar org-epub-cover nil
-  "EPUB cover html")
-(defvar org-epub-cover-img nil
-  "EPUB cover img")
+(defvar org-epub-metadata nil
+  "EPUB export metadata")
+
+(defvar org-epub-headlines nil
+  "EPUB headlines")
+
+(defvar org-epub-style-counter 0
+  "EPUB style counter")
 
 ;; manifest mechanism
 
 (defvar org-epub-manifest nil
   "EPUB export manifest")
 
-(defun org-epub-manifest-entry (filename type mimetype &optional source)
-  (let ((lis (list :filename filename :type type :mimetype mimetype)))
-    (when source
-      (plist-put lis :source source))
-    lis))
+(defun org-epub-manifest-entry (id filename type mimetype &optional source)
+  (list :id id :filename filename :type type :mimetype mimetype :source source))
 
 (defun org-epub-html-p (manifest-entry)
   (eq (plist-get manifest-entry :type) 'html))
@@ -268,8 +269,14 @@
 (defun org-epub-img-p (manifest-entry)
   (eq (plist-get manifest-entry :type) 'img))
 
+(defun org-epub-manifest-needcopy (manifest-entry)
+  (if (plist-get manifest-entry :source)
+      (cons (plist-get manifest-entry :source)
+	    (plist-get manifest-entry :filename))
+    nil))
+
 (defun org-epub-manifest-all (pred)
-  (remove-if-not pred org-epub-manifest))
+  (cl-remove-if-not pred org-epub-manifest))
 
 (cl-defun org-epub-manifest-first (pred)
   (let ((val))
@@ -281,133 +288,96 @@
 
 (defun org-epub-link (link desc info)
   (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
-    (org-epub-include-image link))
+    (let* ((path (org-element-property :path link))
+	   (ref (org-export-get-reference link info))
+	   (mime (file-name-extension path))
+	   (name (concat "img-" ref "." mime)))
+      (push (org-epub-manifest-entry ref name 'img (concat "image/" mime) path) org-epub-manifest)
+      (org-element-put-property link :path name)))
   (org-html-link link desc info))
-
-(defun org-epub-include-image (link)
-  (let* ((path (org-element-property :path link))
-	 (ref (org-export-get-reference link))
-	 (mime (file-name-extension path))
-	 (name (concat "img-" ref "." mime)))
-    (nconc org-epub-manifest (list (org-epub-manifest-entry name 'img (concat "image/" mime) path)))
-    (org-element-put-property link :path name)))
 
 (defun org-epub-nameify (str)
   (replace-regexp-in-string "^[-]*" "" (replace-regexp-in-string "[/\\.]" "-" str)))
+
+(defun org-epub-meta-put (symbols info)
+  (mapc
+   #'(lambda (sym)
+       (let ((data (plist-get info sym)))
+	 (setq org-epub-metadata
+	       (plist-put org-epub-metadata sym
+			  (if (listp data)
+			      (org-export-data data info)
+			    data)))))
+   symbols))
 
 (defun org-epub-template (contents info)
   "Return complete document string after HTML conversion.
 CONTENTS is the transcoded contents string.  INFO is a plist
 holding export options."
-  (let* ((headlines-raw (org-export-collect-headlines info 2))
-	 (headlines (mapcar (lambda (headline)
-			      (list
-			       (org-element-property :raw-value headline)
-			       (org-element-property :level headline)
-			       (org-export-get-reference headline info))) headlines-raw)))
-    ;; options: uid (:epub-uid), title (:title), language (:language),
-    ;; subject (:epub-subject), description (:epub-description), creator
-    ;; (:creator), publisher, date (:date), rights (:epub-rights)
-    (let ((uid (org-export-data (plist-get info :epub-uid) info))
-	  (title (org-export-data (plist-get info :title) info))
-	  (language (org-export-data (plist-get info :language) info))
-	  (subject (org-export-data (plist-get info :epub-subject) info))
-	  (description (org-export-data (plist-get info :epub-description) info))
-	  (author (org-export-data (plist-get info :author) info))
-	  (publisher (org-export-data (plist-get info :epub-publisher) info))
-	  (date (org-export-data (plist-get info :date) info))
-	  (rights (org-export-data (plist-get info :epub-rights) info)))
-      ;; gen style.css
-      (when (plist-get info :html-head-include-default-style)
-	(with-current-buffer (find-file (concat org-epub-zip-dir "style.css"))
-	  (insert org-epub-style-default)
-	  (save-buffer 0)
-	  (kill-buffer))))
-      ;; maybe set toc-depth "2" to some dynamic value
-      (with-current-buffer (find-file (concat org-epub-zip-dir "toc.ncx"))
-	(erase-buffer)
-	(insert
-	 (org-epub-template-toc-ncx uid 2 title (org-epub-generate-toc-single headlines "body.html")))
-	(save-buffer 0)
-	(kill-buffer))
-      (when (plist-get info :epub-cover)
-	(let* ((cover-path (plist-get info :epub-cover))
-	       (cover-type (file-name-extension cover-path))
-	       (cover-img (create-image (expand-file-name cover-path)))
-	       (cover-width (car (image-size cover-img t)))
-	       (cover-height (cdr (image-size cover-img t)))
-	       (cover-name (concat "cover." cover-type)))
-	  (message cover-path)
-	  (copy-file cover-path (concat org-epub-zip-dir cover-name) t)
-	  (with-current-buffer (find-file (concat org-epub-zip-dir "cover.html"))
-	    (erase-buffer)
-	    (insert
-	     (org-epub-template-cover cover-name cover-width cover-height))
-	    (save-buffer 0)
-	    (kill-buffer)
-	    (setf org-epub-cover "cover.html")
-	    (setf org-epub-cover-img cover-name))))
-      (with-current-buffer (find-file (concat org-epub-zip-dir "content.opf"))
-	(erase-buffer)
-	(insert (org-epub-template-content-opf title language uid subject description author publisher date rights
-					       (org-epub-gen-manifest (append
-								       '(("body-html" "body.html" "application/xhtml+xml")
-									 ("style-css" "style.css" "text/css"))
-								       (mapcar
-									(lambda (el)
-									  (list (org-epub-nameify el)
-										el
-										(concat "image/" (file-name-extension el))))
-									org-epub-image-list)))
-					       (org-epub-gen-spine '(("body-html" . "body.html")))))
-	(save-buffer 0)
-	(kill-buffer))))
-    (concat
-     (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
-       (let* ((xml-declaration (plist-get info :html-xml-declaration))
-	      (decl (or (and (stringp xml-declaration) xml-declaration)
-			(cdr (assoc (plist-get info :html-extension)
-				    xml-declaration))
-			(cdr (assoc "html" xml-declaration))
-			"")))
-	 (when (not (or (not decl) (string= "" decl)))
-	   (format "%s\n"
-		   (format decl
-			   (or (and org-html-coding-system
-				    (fboundp 'coding-system-get)
-				    (coding-system-get org-html-coding-system 'mime-charset))
-			       "iso-8859-1"))))))
-     "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">"
-     "\n"
-     (concat "<html"
-	     (format
-	      " xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"%s\" xml:lang=\"%s\""
-	      (plist-get info :language) (plist-get info :language))
-	     ">\n")
-     
-     "<head>\n"
-     (org-html--build-meta-info info)
-     (when (plist-get info :html-head-include-default-style)
-       "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/>\n")
-     (when (plist-get info :epub-style)
-       (mapconcat
-	#'(lambda (str)
-	    (concat "<link rel=\"stylesheet\" type=\"text/css\" href=\"" str "\"/>\n"))
-	(org-split-string (or (plist-get info :epub-style) " "))))
-     "</head>\n"
-     "<body>\n"
-     ;; Preamble.
-     (org-html--build-pre/postamble 'preamble info)
-     ;; Document contents.
+  (org-epub-meta-put '(:epub-uid :title :language :epub-subject :epub-description :author
+				 :epub-publisher :date :epub-rights :html-head-include-default-style :epub-cover :epub-style) info)
+  (setq org-epub-metadata (plist-put org-epub-metadata :epub-toc-depth 2))
+  ;; maybe set toc-depth "2" to some dynamic value
+  (setq org-epub-headlines
+	(mapcar (lambda (headline)
+		  (list
+		   (org-element-property :raw-value headline)
+		   (org-element-property :level headline)
+		   (org-export-get-reference headline info)))
+		(org-export-collect-headlines info 2)))
+  (let ((styles (org-split-string (or (plist-get org-epub-metadata :epub-style) " "))))
+    (mapc #'(lambda (style)
+	      (let* ((stylenum (incf org-epub-style-counter))
+		     (stylename (concat "style-" (format "%d" stylenum)))
+		     (stylefile (concat stylename ".css")))
+		(push (org-epub-manifest-entry stylename stylefile 'stylesheet "text/css" style) org-epub-manifest)))
+	  styles))
+  (concat
+   (when (and (not (org-html-html5-p info)) (org-html-xhtml-p info))
+     (let* ((xml-declaration (plist-get info :html-xml-declaration))
+	    (decl (or (and (stringp xml-declaration) xml-declaration)
+		      (cdr (assoc (plist-get info :html-extension)
+				  xml-declaration))
+		      (cdr (assoc "html" xml-declaration))
+		      "")))
+       (when (not (or (not decl) (string= "" decl)))
+	 (format "%s\n"
+		 (format decl
+			 (or (and org-html-coding-system
+				  (fboundp 'coding-system-get)
+				  (coding-system-get org-html-coding-system 'mime-charset))
+			     "iso-8859-1"))))))
+   "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">"
+   "\n"
+   (concat "<html"
+	   (format
+	    " xmlns=\"http://www.w3.org/1999/xhtml\" lang=\"%s\" xml:lang=\"%s\""
+	    (plist-get info :language) (plist-get info :language))
+	   ">\n")
+   
+   "<head>\n"
+   (org-html--build-meta-info info)
+   (when (plist-get info :html-head-include-default-style)
+     "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/>\n")
+   (when (plist-get info :epub-style)
+     (mapconcat
+      #'(lambda (entry)
+	  (concat "<link rel=\"stylesheet\" type=\"text/css\" href=\"" (plist-get entry :filename) "\"/>\n"))
+      (org-epub-manifest-all #'org-epub-style-p) "\n"))
+   "</head>\n"
+   "<body>\n"
+   ;; Preamble.
+   (org-html--build-pre/postamble 'preamble info)
+   ;; Document contents.
 					;   (let ((div (assq 'content (plist-get info :html-divs))))
 					;     (format "<%s id=\"%s\">\n" (nth 1 div) (nth 2 div)))
-     "<div id=\"content\">"
-     ;; Document title.
-     (when (plist-get info :with-title)
-       (let ((title (plist-get info :title))
-	     (subtitle (plist-get info :subtitle))
-	     (html5-fancy (org-html--html5-fancy-p info)))
-	 (when title
+   "<div id=\"content\">"
+   ;; Document title.
+   (when (plist-get info :with-title)
+     (let ((title (plist-get info :title))
+	   (subtitle (plist-get info :subtitle))
+	   (html5-fancy (org-html--html5-fancy-p info)))
+       (when title
 	 (format
 	  (if html5-fancy
 	      "<header>\n<h1 class=\"title\">%s</h1>\n%s</header>"
@@ -422,7 +392,7 @@ holding export options."
 	    "")))))
      contents
      "</div>"
-					;   (format "</%s>\n" (nth 1 (assq 'content (plist-get info :html-divs))))
+     ;   (format "</%s>\n" (nth 1 (assq 'content (plist-get info :html-divs))))
      ;; Postamble.
      (org-html--build-pre/postamble 'postamble info)
      ;; Closing document.
@@ -432,14 +402,36 @@ holding export options."
 
 (defmacro org-epub--export-wrapper (outfile &rest body)
   `(let* ((outfile ,outfile)
+	  (org-epub-manifest nil)
+	  (org-epub-metadata nil)
+	  (org-epub-style-counter 0)
 	  (out-file-type (file-name-extension outfile))
-	  (org-epub-image-counter 0)
-	  (org-epub-image-list nil)
-	  (org-epub-cover nil)
-	  (org-epub-cover-img nil)
 	  (org-epub-zip-dir (file-name-as-directory
 			     (make-temp-file (format "%s-" out-file-type) t)))
 	  (body ,@body))
+     (when (plist-get org-epub-metadata :html-head-include-default-style)
+       (with-current-buffer (find-file (concat org-epub-zip-dir "style.css"))
+	 (insert org-epub-style-default)
+	 (save-buffer 0)
+	 (kill-buffer)
+	 (push (org-epub-manifest-entry "default-style" "style.css" 'stylesheet "text/css") org-epub-manifest)))
+     (when (plist-get org-epub-metadata :epub-cover)
+       (let* ((cover-path (plist-get org-epub-metadata :epub-cover))
+	      (cover-type (file-name-extension cover-path))
+	      (cover-img (create-image (expand-file-name cover-path)))
+	      (cover-width (car (image-size cover-img t)))
+	      (cover-height (cdr (image-size cover-img t)))
+	      (cover-name (concat "cover." cover-type)))
+	 (with-current-buffer (find-file (concat org-epub-zip-dir "cover.html"))
+	   (erase-buffer)
+	   (insert
+	    (org-epub-template-cover cover-name cover-width cover-height))
+	   (save-buffer 0)
+	   (kill-buffer)
+	   (let ((men (org-epub-manifest-entry "cover" "cover.html" 'cover "application/xhtml+xml")))
+	     (push men org-epub-manifest))
+	   (let ((men (org-epub-manifest-entry "cover-image" cover-name 'coverimg (concat "image/" cover-type) cover-path)))
+	     (push men org-epub-manifest)))))
      (with-current-buffer (find-file (concat org-epub-zip-dir "META-INF/container.xml"))
        (erase-buffer)
        (insert (org-epub-template-container))
@@ -456,9 +448,29 @@ holding export options."
        (erase-buffer)
        (insert body)
        (save-buffer 0)
+       (kill-buffer)
+       (nconc org-epub-manifest (list (org-epub-manifest-entry "body-html" "body.html" 'html "application/xhtml+xml"))))
+     (with-current-buffer (find-file (concat org-epub-zip-dir "toc.ncx"))
+       (erase-buffer)
+       (insert
+	(org-epub-template-toc-ncx
+	 (plist-get org-epub-metadata :epub-uid)
+	 (plist-get org-epub-metadata :epub-toc-depth)
+	 (plist-get org-epub-metadata :title)
+	 (org-epub-generate-toc-single org-epub-headlines "body.html")))
+       (save-buffer 0)
        (kill-buffer))
-     (org-epub-zip-it-up outfile '("body.html" "style.css") org-epub-zip-dir)
+     (with-current-buffer (find-file (concat org-epub-zip-dir "content.opf"))
+       (erase-buffer)
+       (insert (org-epub-template-content-opf
+		org-epub-metadata
+		(org-epub-gen-manifest org-epub-manifest)
+		(org-epub-gen-spine '(("body-html" . "body.html")))))
+       (save-buffer 0)
+       (kill-buffer))
+     (org-epub-zip-it-up outfile org-epub-manifest org-epub-zip-dir)
      (delete-directory org-epub-zip-dir t)
+     (message (with-output-to-string (print org-epub-manifest)))
      (message "Generated %s" outfile)
      (expand-file-name outfile)))
 
@@ -517,7 +529,7 @@ ebook and TOC-NAV being the raw contents enclosed in navMap."
    "</navMap>
 </ncx>"))
 
-(defun org-epub-template-content-opf (title language uid subject description creator publisher date rights manifest spine)
+(defun org-epub-template-content-opf (meta manifest spine)
   "Create the content.opf file.
 
 The following metadata is included in the content.opf: TITLE is
@@ -541,46 +553,47 @@ string with the list of html files in reading order."
       xmlns:dcterms=\"http://purl.org/dc/terms/\"
       xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
       xmlns:opf=\"http://www.idpf.org/2007/opf\">
-      <dc:title>" title "</dc:title>
-      <dc:language xsi:type=\"dcterms:RFC3066\">" language "</dc:language>
+      <dc:title>" (plist-get meta :title) "</dc:title>
+      <dc:language xsi:type=\"dcterms:RFC3066\">" (plist-get meta :language) "</dc:language>
       <dc:identifier id=\"dcidid\" opf:scheme=\"URI\">"
-      uid
+      (plist-get meta :epub-uid)
          "</dc:identifier>
-      <dc:subject>" subject
+      <dc:subject>" (plist-get meta :epub-subject)
          "</dc:subject>
-      <dc:description>" description
+      <dc:description>" (plist-get meta :epub-description)
 
          "</dc:description>
-      <dc:creator>" creator "</dc:creator>
-      <dc:publisher>" publisher "</dc:publisher>
-      <dc:date xsi:type=\"dcterms:W3CDTF\">" date "</dc:date>
-      <dc:rights>" rights "</dc:rights>"
-      (when org-epub-cover
-	"<meta name=\"cover\" content=\"cover-image\"/>")
+      <dc:creator>" (plist-get meta :author) "</dc:creator>
+      <dc:publisher>" (plist-get meta :epub-publisher) "</dc:publisher>
+      <dc:date xsi:type=\"dcterms:W3CDTF\">" (plist-get meta :date) "</dc:date>
+      <dc:rights>" (plist-get meta :epub-rights) "</dc:rights>"
+      (let ((cimg (org-epub-manifest-first #'org-epub-coverimg-p)))
+	(when cimg
+	  (concat "<meta name=\"cover\" content=\"" (plist-get cimg :id) "\"/>")))
       "
    </metadata>
 
-   <manifest>\n"
-      (when org-epub-cover
-	(concat "<item id=\"cover\" href=\"cover.html\" media-type=\"application/xhtml+xml\"/>
-         <item id=\"cover-image\" href=\"" org-epub-cover-img "\" media-type=\"" (concat "image/" (file-name-extension org-epub-cover-img)) "\"/>"))
-      "<item id=\"ncx\"      href=\"toc.ncx\"
+   <manifest>\n
+      <item id=\"ncx\"      href=\"toc.ncx\"
          media-type=\"application/x-dtbncx+xml\" />"
+      
       manifest
       
    "</manifest>
 
    <spine toc=\"ncx\">"
-   (when org-epub-cover
-     "<itemref idref=\"cover\" linear=\"no\" />")
+   (let ((chtml (org-epub-manifest-first #'org-epub-cover-p)))
+     (when chtml
+       (concat "<itemref idref=\"" (plist-get chtml :id) "\" linear=\"no\" />")))
    
    spine
 
    "</spine>
 
  <guide>"
-   (when org-epub-cover
-     " <reference type=\"cover\" href=\"" org-epub-cover "\" />")
+   (let ((chtml (org-epub-manifest-first #'org-epub-cover-p)))
+     (when chtml
+       (concat " <reference type=\"cover\" href=\"" (plist-get chtml :filename) "\" />")))
    "
  </guide>
 
@@ -592,8 +605,8 @@ string with the list of html files in reading order."
 FILES is the list of files to be included in the manifest."
   (mapconcat
    (lambda (file)
-     (concat "<item id=\"" (car file) "\"      href=\"" (second file) "\"
-            media-type=\"" (third file) "\" />\n"))
+     (concat "<item id=\"" (plist-get file :id) "\"      href=\"" (plist-get file :filename) "\"
+            media-type=\"" (plist-get file :mimetype) "\" />\n"))
    files ""))
 
 (defun org-epub-gen-spine (files)
@@ -647,6 +660,11 @@ properties of the image."
 EPUB-FILE is the target filename, FILES is the list of source
 files to process, while TARGET-DIR is the directory where
 exported HTML files live.  "
+  (mapc #'(lambda (entry)
+	    (let ((copy (org-epub-manifest-needcopy entry)))
+	      (when copy
+		(copy-file (car copy) (concat target-dir (cdr copy)) t))))
+	files)
   (let ((default-directory target-dir)
 	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
     (call-process "zip" nil '(:file "zip.log") nil
@@ -656,8 +674,7 @@ exported HTML files live.  "
     (apply 'call-process "zip" nil '(:file "zip.log") nil
 	   "-Xu9"
 	   epub-file
-	   (append meta-files files org-epub-image-list
-		   (when org-epub-cover (list org-epub-cover org-epub-cover-img)))))
+	   (append meta-files (mapcar #'(lambda (el) (plist-get el :filename)) files))))
   (copy-file (concat target-dir epub-file) default-directory t))
 
 (defun org-epub-generate-toc-single (headlines filename)
