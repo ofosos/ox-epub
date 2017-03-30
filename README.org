@@ -20,8 +20,9 @@ Hit =C-c C-e E e= to publish the current buffer to an EPUB.
 There are some required export options that need to be set. These are
 
  - =UID= a unique id of the document, otherwise known as uri, may be a url
- - =DATE= the date of the document, see [[https://www.w3.org/TR/NOTE-datetime]]
- - =AUTHOR= the document author
+ - =DATE= the date of the document, for valid values see
+   [[https://www.w3.org/TR/NOTE-datetime]]
+ - =AUTHOR= the document author or editor, the creator in the EPUB spec
  - =TITLE= the document title
 
 Furthermore there are some properties which are optional:
@@ -29,11 +30,15 @@ Furthermore there are some properties which are optional:
  - =Subject= the subject matter of the book
  - =Description= a description of the book
  - =Publisher= the publisher of the book
- - =License= the license associated with this book
+ - =License= the rights associated with this book, the copyright
+   notice and further rights may be included in this option.
 
 The only other option that is exported:
 
- - =LANGUAGE= the language of the book
+ - =LANGUAGE= the language of the book, this is to be interpreted
+   according to RFC3066 or it's succeeding documents
+   [[https://www.ietf.org/rfc/rfc3066.txt]], no other interpretations are
+   allowed according to the EPUB spec.
 
 *** TODO check syntax of language org vs. epub.
 
