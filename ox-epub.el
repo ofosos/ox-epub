@@ -58,7 +58,11 @@
     (link . org-epub-link))
   :menu-entry
   '(?E "Export to Epub"
-       ((?e "As Epub file" org-epub-export-to-epub))))
+       ((?e "As Epub file" org-epub-export-to-epub)
+	(?O "As Epub file and open"
+	    (lambda (a s v b)
+	      (if a (org-epub-export-to-epub t s v)
+		(org-open-file (org-epub-export-to-epub nil s v) 'system)))))))
 
 (defvar org-epub-zip-dir nil
   "The temporary directory to export to")
