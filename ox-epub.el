@@ -407,6 +407,8 @@ the property list for the export process."
 	 (out-file-type (file-name-extension outfile))
 	 (org-epub-image-counter 0)
 	 (org-epub-image-list nil)
+	 (org-epub-cover nil)
+	 (org-epub-cover-img nil)
 	 (org-epub-zip-dir (file-name-as-directory
 			    (make-temp-file (format "%s-" out-file-type) t)))
 	 (body (org-export-as 'epub subtreep visible-only nil ext-plist)))
@@ -466,7 +468,7 @@ ebook and TOC-NAV being the raw contents enclosed in navMap."
    "</navMap>
 </ncx>"))
 
-(defun org-epub-template-content-opf (title language uid subject description creator publisher date rights manifest spine cover)
+(defun org-epub-template-content-opf (title language uid subject description creator publisher date rights manifest spine)
   "Create the content.opf file.
 
 The following metadata is included in the content.opf: TITLE is
@@ -512,9 +514,9 @@ Finally COVER is the cover image filename."
    </metadata>
 
    <manifest>\n"
-      (when cover
+      (when org-epub-cover
 	(concat "<item id=\"cover\" href=\"cover.html\" media-type=\"application/xhtml+xml\"/>
-         <item id=\"cover-image\" href=\"" cover "\" media-type=\"" (concat "image/" (file-name-extension cover)) "\"/>"))
+         <item id=\"cover-image\" href=\"" org-epub-cover-img "\" media-type=\"" (concat "image/" (file-name-extension org-epub-cover-img)) "\"/>"))
       "<item id=\"ncx\"      href=\"toc.ncx\"
          media-type=\"application/x-dtbncx+xml\" />"
       manifest
@@ -522,7 +524,7 @@ Finally COVER is the cover image filename."
    "</manifest>
 
    <spine toc=\"ncx\">"
-   (when cover
+   (when org-epub-cover
      "<itemref idref=\"cover\" linear=\"no\" />")
    
    spine
@@ -530,8 +532,8 @@ Finally COVER is the cover image filename."
    "</spine>
 
  <guide>"
-   (when cover
-     " <reference type=\"cover\" href=\"cover.html\" />")
+   (when org-epub-cover
+     " <reference type=\"cover\" href=\"" org-epub-cover "\" />")
    "
  </guide>
 
