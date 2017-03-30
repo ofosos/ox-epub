@@ -246,27 +246,41 @@
   "EPUB export manifest")
 
 (defun org-epub-manifest-entry (id filename type mimetype &optional source)
+  "Create a manifest entry with the given ID, FILENAME, TYPE, MIMETYPE and optional SOUCE.
+
+FILENAME should be the new name in the epub container. TYPE
+should be one of `'html', `'stylesheet', `'coverimg', `'cover' or
+`'img'. If SOURCE is given the file name by SOUCE will be copied
+to FILENAME at the end of the export process.  "
   (list :id id :filename filename :type type :mimetype mimetype :source source))
 
 (defun org-epub-cover-p (manifest-entry)
+  "Determine if MANIFEST-ENTRY is of type cover."
   (eq (plist-get manifest-entry :type) 'cover))
 
 (defun org-epub-coverimg-p (manifest-entry)
+  "Determine if MANIFEST-ENTRY is of type cover image."
   (eq (plist-get manifest-entry :type) 'coverimg))
 
 (defun org-epub-style-p (manifest-entry)
+  "Determine if MANIFEST-ENTRY is of type stylesheet."
   (eq (plist-get manifest-entry :type) 'stylesheet))
 
 (defun org-epub-manifest-needcopy (manifest-entry)
+  "Determine if MANIFEST-ENTRY needs to be copied.
+
+If it needs to be copied return a pair (sourcefile . targetfile)."
   (if (plist-get manifest-entry :source)
       (cons (plist-get manifest-entry :source)
 	    (plist-get manifest-entry :filename))
     nil))
 
 (defun org-epub-manifest-all (pred)
+  "Return all manifest entries for which PRED is true."
   (cl-remove-if-not pred org-epub-manifest))
 
 (cl-defun org-epub-manifest-first (pred)
+  "Return the first manifest entry for which PRED is true."
   (let ((val))
     (dolist (el org-epub-manifest val)
       (when (funcall pred el)
@@ -275,6 +289,9 @@
 ;; core
 
 (defun org-epub-link (link desc info)
+  "Return the HTML required for a link descriped by LINK, DESC, and INFO.
+
+See org-html-link for more info."
   (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
     (let* ((path (org-element-property :path link))
 	   (ref (org-export-get-reference link info))
@@ -284,10 +301,8 @@
       (org-element-put-property link :path name)))
   (org-html-link link desc info))
 
-(defun org-epub-nameify (str)
-  (replace-regexp-in-string "^[-]*" "" (replace-regexp-in-string "[/\\.]" "-" str)))
-
 (defun org-epub-meta-put (symbols info)
+  "Put SYMBOLS taken from INFO into the org-epub metadata cache."
   (mapc
    #'(lambda (sym)
        (let ((data (plist-get info sym)))
@@ -389,6 +404,7 @@ holding export options."
 ;; see ox-odt
 
 (defmacro org-epub--export-wrapper (outfile &rest body)
+  "Export an Epub with BODY generating the main html file and OUTFILE as target file."
   `(let* ((outfile ,outfile)
 	  (org-epub-manifest nil)
 	  (org-epub-metadata nil)
@@ -520,12 +536,7 @@ ebook and TOC-NAV being the raw contents enclosed in navMap."
 (defun org-epub-template-content-opf (meta manifest spine)
   "Create the content.opf file.
 
-The following metadata is included in the content.opf: TITLE is
-the title of the ebook, LANGUAGE is the language, UID is the
-uid/url of the ebook, SUBJECT is the theme of the book in
-keywords, DESCRIPTION is a longer free form description, CREATOR
-is the author, PUBLISHER identifies the publisher, DATE is the
-date of publication, RIGHTS signifies the copyrights.
+META is a metadata PLIST.
 
 The following arguments are XML strings: MANIFEST is the content
 inside the manifest tags, this should include all user generated
@@ -590,7 +601,7 @@ string with the list of html files in reading order."
 (defun org-epub-gen-manifest (files)
   "Generate the manifest XML string.
 
-FILES is the list of files to be included in the manifest."
+FILES is the list of files to be included in the manifest xml string."
   (mapconcat
    (lambda (file)
      (concat "<item id=\"" (plist-get file :id) "\"      href=\"" (plist-get file :filename) "\"
@@ -647,7 +658,8 @@ properties of the image."
 
 EPUB-FILE is the target filename, FILES is the list of source
 files to process, while TARGET-DIR is the directory where
-exported HTML files live.  "
+exported HTML files live. This function will copy any files into
+their proper place."
   (mapc #'(lambda (entry)
 	    (let ((copy (org-epub-manifest-needcopy entry)))
 	      (when copy
