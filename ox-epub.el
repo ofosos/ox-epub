@@ -242,6 +242,8 @@
 (defvar org-epub-cover-img nil
   "EPUB cover img")
 
+;; manifest mechanism
+
 (defvar org-epub-manifest nil
   "EPUB export manifest")
 
@@ -274,7 +276,8 @@
     (dolist (el org-epub-manifest val)
       (when (funcall pred el)
 	(return-from org-epub-manifest-first el)))))
-    
+
+;; core
 
 (defun org-epub-link (link desc info)
   (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
