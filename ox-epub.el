@@ -242,6 +242,40 @@
 (defvar org-epub-cover-img nil
   "EPUB cover img")
 
+(defvar org-epub-manifest nil
+  "EPUB export manifest")
+
+(defun org-epub-manifest-entry (filename type mimetype &optional source)
+  (let ((lis (list :filename filename :type type :mimetype mimetype)))
+    (when source
+      (plist-put lis :source source))
+    lis))
+
+(defun org-epub-html-p (manifest-entry)
+  (eq (plist-get manifest-entry :type) 'html))
+
+(defun org-epub-style-p (manifest-entry)
+  (eq (plist-get manifest-entry :type) 'style))
+
+(defun org-epub-cover-p (manifest-entry)
+  (eq (plist-get manifest-entry :type) 'cover))
+
+(defun org-epub-coverimg-p (manifest-entry)
+  (eq (plist-get manifest-entry :type) 'coverimg))
+
+(defun org-epub-img-p (manifest-entry)
+  (eq (plist-get manifest-entry :type) 'img))
+
+(defun org-epub-manifest-all (pred)
+  (remove-if-not pred org-epub-manifest))
+
+(cl-defun org-epub-manifest-first (pred)
+  (let ((val))
+    (dolist (el org-epub-manifest val)
+      (when (funcall pred el)
+	(return-from org-epub-manifest-first el)))))
+    
+
 (defun org-epub-link (link desc info)
   (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
     (org-epub-include-image link))
