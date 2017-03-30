@@ -283,15 +283,11 @@ holding export options."
 	  (date (org-export-data (plist-get info :date) info))
 	  (rights (org-export-data (plist-get info :epub-rights) info)))
       ;; gen style.css
-      (let ((style (if (plist-get info :epub-style)
-		       (with-temp-buffer
-			 (insert-file-contents (plist-get info :epub-style))
-			 (buffer-string))
-		     org-epub-style-default)))
+      (when (plist-get info :html-head-include-default-style)
 	(with-current-buffer (find-file (concat org-epub-zip-dir "style.css"))
-	  (insert style)
+	  (insert org-epub-style-default)
 	  (save-buffer 0)
-	  (kill-buffer)))
+	  (kill-buffer))))
       ;; maybe set toc-depth "2" to some dynamic value
       (with-current-buffer (find-file (concat org-epub-zip-dir "toc.ncx"))
 	(erase-buffer)
@@ -356,7 +352,13 @@ holding export options."
      
      "<head>\n"
      (org-html--build-meta-info info)
-     "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/>"
+     (when (plist-get info :html-head-include-default-style)
+       "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/>\n")
+     (when (plist-get info :epub-style)
+       (mapconcat
+	#'(lambda (str)
+	    (concat "<link rel=\"stylesheet\" type=\"text/css\" href=\"" str "\"/>\n"))
+	(org-split-string (or (plist-get info :epub-style) " "))))
      "</head>\n"
      "<body>\n"
      ;; Preamble.
