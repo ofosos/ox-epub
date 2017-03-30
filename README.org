@@ -45,6 +45,7 @@ The only other option that is exported:
 Currently =ox-epub= can do the following:
 
  - simple cover images (broken)
+ - exports png and jpg images
  - direct =.epub= generation
 
 ** Caveats
