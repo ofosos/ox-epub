@@ -52,7 +52,8 @@
     (:epub-description "Description" nil nil t)
     (:epub-publisher "Publisher" nil nil t)
     (:epub-rights "License" nil nil t)
-    (:epub-style "EPUBSTYLE" nil nil t))
+    (:epub-style "EPUBSTYLE" nil nil t)
+    (:epub-cover "EPUBCOVER" nil nil t))
     
   :translate-alist
   '((template . org-epub-template)
@@ -236,6 +237,11 @@
 "
   "Default style declarations for org epub")
 
+(defvar org-epub-cover nil
+  "EPUB cover html")
+(defvar org-epub-cover-img nil
+  "EPUB cover img")
+
 (defun org-epub-link (link desc info)
   (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
     (org-epub-include-image link))
@@ -293,7 +299,23 @@ holding export options."
 	 (org-epub-template-toc-ncx uid 2 title (org-epub-generate-toc-single headlines "body.html")))
 	(save-buffer 0)
 	(kill-buffer))
-      ;; insert cover export
+      (when (plist-get info :epub-cover)
+	(let* ((cover-path (plist-get info :epub-cover))
+	       (cover-type (file-name-extension cover-path))
+	       (cover-img (create-image (expand-file-name cover-path)))
+	       (cover-width (car (image-size cover-img t)))
+	       (cover-height (cdr (image-size cover-img t)))
+	       (cover-name (concat "cover." cover-type)))
+	  (message cover-path)
+	  (copy-file cover-path (concat org-epub-zip-dir cover-name) t)
+	  (with-current-buffer (find-file (concat org-epub-zip-dir "cover.html"))
+	    (erase-buffer)
+	    (insert
+	     (org-epub-template-cover cover-name cover-width cover-height))
+	    (save-buffer 0)
+	    (kill-buffer)
+	    (setf org-epub-cover "cover.html")
+	    (setf org-epub-cover-img cover-name))))
       (with-current-buffer (find-file (concat org-epub-zip-dir "content.opf"))
 	(erase-buffer)
 	(insert (org-epub-template-content-opf title language uid subject description author publisher date rights
@@ -306,7 +328,7 @@ holding export options."
 										el
 										(concat "image/" (file-name-extension el))))
 									org-epub-image-list)))
-					       (org-epub-gen-spine '(("body-html" . "body.html"))) nil)) ;; FIXME cover
+					       (org-epub-gen-spine '(("body-html" . "body.html"))) org-epub-cover-img))
 	(save-buffer 0)
 	(kill-buffer))))
     (concat
@@ -405,7 +427,7 @@ the property list for the export process."
       (insert body)
       (save-buffer 0)
       (kill-buffer))
-    (org-epub-zip-it-up outfile '("body.html" "style.css") org-epub-zip-dir nil)
+    (org-epub-zip-it-up outfile '("body.html" "style.css") org-epub-zip-dir)
     (message "Generated %s" outfile)
     (expand-file-name outfile)))
 
@@ -492,7 +514,7 @@ Finally COVER is the cover image filename."
    <manifest>\n"
       (when cover
 	(concat "<item id=\"cover\" href=\"cover.html\" media-type=\"application/xhtml+xml\"/>
-         <item id=\"cover-image\" href=\"" cover "\" media-type=\"image/jpeg\"/>"))
+         <item id=\"cover-image\" href=\"" cover "\" media-type=\"" (concat "image/" (file-name-extension cover)) "\"/>"))
       "<item id=\"ncx\"      href=\"toc.ncx\"
          media-type=\"application/x-dtbncx+xml\" />"
       manifest
@@ -570,7 +592,7 @@ properties of the image."
   "Generate the mimetype file for the epub."
   "application/epub+zip")
 
-(defun org-epub-zip-it-up (epub-file files target-dir cover)
+(defun org-epub-zip-it-up (epub-file files target-dir)
   "Create the .epub file by zipping up the contents.
 
 EPUB-FILE is the target filename, FILES is the list of source
@@ -586,8 +608,8 @@ image, which may be nil."
     (apply 'call-process "zip" nil '(:file "zip.log") nil
 	   "-Xu9"
 	   epub-file
-	   (append meta-files (when cover (list cover "cover.html"))
-		   files org-epub-image-list)))
+	   (append meta-files files org-epub-image-list
+		   (when org-epub-cover (list org-epub-cover org-epub-cover-img)))))
   (copy-file (concat target-dir epub-file) default-directory t))
 
 (defun org-epub-generate-toc-single (headlines filename)
