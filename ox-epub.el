@@ -328,7 +328,7 @@ holding export options."
 										el
 										(concat "image/" (file-name-extension el))))
 									org-epub-image-list)))
-					       (org-epub-gen-spine '(("body-html" . "body.html"))) org-epub-cover-img))
+					       (org-epub-gen-spine '(("body-html" . "body.html")))))
 	(save-buffer 0)
 	(kill-buffer))))
     (concat
@@ -481,9 +481,7 @@ date of publication, RIGHTS signifies the copyrights.
 The following arguments are XML strings: MANIFEST is the content
 inside the manifest tags, this should include all user generated
 html files but not things like the cover page, SPINE is an XML
-string with the list of html files in reading order.
-
-Finally COVER is the cover image filename."
+string with the list of html files in reading order."
   (concat
    "<?xml version=\"1.0\"?>
 
@@ -508,7 +506,7 @@ Finally COVER is the cover image filename."
       <dc:publisher>" publisher "</dc:publisher>
       <dc:date xsi:type=\"dcterms:W3CDTF\">" date "</dc:date>
       <dc:rights>" rights "</dc:rights>"
-      (when cover
+      (when org-epub-cover
 	"<meta name=\"cover\" content=\"cover-image\"/>")
       "
    </metadata>
