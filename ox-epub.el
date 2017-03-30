@@ -286,13 +286,11 @@
 
 (defun org-epub-include-image (link)
   (let* ((path (org-element-property :path link))
-	 (number (cl-incf org-epub-image-counter))
-	 (new-path (concat "./images/" (format "%i.%s" number (file-name-extension path)))))
-    (when (eq number 1)
-      (make-directory (concat org-epub-zip-dir "images/") t))
-    (push new-path org-epub-image-list)
-    (copy-file (concat default-directory path) (concat org-epub-zip-dir new-path) t)
-    (org-element-put-property link :path new-path)))
+	 (ref (org-export-get-reference link))
+	 (mime (file-name-extension path))
+	 (name (concat "img-" ref "." mime)))
+    (nconc org-epub-manifest (list (org-epub-manifest-entry name 'img (concat "image/" mime) path)))
+    (org-element-put-property link :path name)))
 
 (defun org-epub-nameify (str)
   (replace-regexp-in-string "^[-]*" "" (replace-regexp-in-string "[/\\.]" "-" str)))
