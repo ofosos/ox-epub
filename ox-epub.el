@@ -69,12 +69,6 @@
 (defvar org-epub-zip-dir nil
   "The temporary directory to export to")
 
-(defvar org-epub-image-counter 0
-  "Counter for the exported images")
-
-(defvar org-epub-image-list nil
-  "List of images that need to be included in the EPUB")
-
 (defvar org-epub-style-default "
   .title  { text-align: center;
              margin-bottom: .2em; }
@@ -254,20 +248,14 @@
 (defun org-epub-manifest-entry (id filename type mimetype &optional source)
   (list :id id :filename filename :type type :mimetype mimetype :source source))
 
-(defun org-epub-html-p (manifest-entry)
-  (eq (plist-get manifest-entry :type) 'html))
-
-(defun org-epub-style-p (manifest-entry)
-  (eq (plist-get manifest-entry :type) 'style))
-
 (defun org-epub-cover-p (manifest-entry)
   (eq (plist-get manifest-entry :type) 'cover))
 
 (defun org-epub-coverimg-p (manifest-entry)
   (eq (plist-get manifest-entry :type) 'coverimg))
 
-(defun org-epub-img-p (manifest-entry)
-  (eq (plist-get manifest-entry :type) 'img))
+(defun org-epub-style-p (manifest-entry)
+  (eq (plist-get manifest-entry :type) 'stylesheet))
 
 (defun org-epub-manifest-needcopy (manifest-entry)
   (if (plist-get manifest-entry :source)
