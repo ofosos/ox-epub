@@ -597,8 +597,7 @@ properties of the image."
 
 EPUB-FILE is the target filename, FILES is the list of source
 files to process, while TARGET-DIR is the directory where
-exported HTML files live.  COVER is the filename of the cover
-image, which may be nil."
+exported HTML files live.  "
   (let ((default-directory target-dir)
 	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
     (call-process "zip" nil '(:file "zip.log") nil
