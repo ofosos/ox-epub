@@ -393,6 +393,38 @@ holding export options."
 
 ;; see ox-odt
 
+(defmacro org-epub--export-wrapper (outfile &rest body)
+  `(let* ((outfile ,outfile)
+	  (out-file-type (file-name-extension outfile))
+	  (org-epub-image-counter 0)
+	  (org-epub-image-list nil)
+	  (org-epub-cover nil)
+	  (org-epub-cover-img nil)
+	  (org-epub-zip-dir (file-name-as-directory
+			     (make-temp-file (format "%s-" out-file-type) t)))
+	  (body ,@body))
+     (with-current-buffer (find-file (concat org-epub-zip-dir "META-INF/container.xml"))
+       (erase-buffer)
+       (insert (org-epub-template-container))
+       (unless (file-exists-p (concat org-epub-zip-dir "META-INF"))
+	 (make-directory (concat org-epub-zip-dir "META-INF")))
+       (save-buffer 0)
+       (kill-buffer))
+     (with-current-buffer (find-file (concat org-epub-zip-dir "mimetype"))
+       (erase-buffer)
+       (insert (org-epub-template-mimetype))
+       (save-buffer 0)
+       (kill-buffer))
+     (with-current-buffer (find-file (concat org-epub-zip-dir "body.html"))
+       (erase-buffer)
+       (insert body)
+       (save-buffer 0)
+       (kill-buffer))
+     (org-epub-zip-it-up outfile '("body.html" "style.css") org-epub-zip-dir)
+     (delete-directory org-epub-zip-dir t)
+     (message "Generated %s" outfile)
+     (expand-file-name outfile)))
+
 ;;compare org-export-options-alist
 ;;;###autoload
 (defun org-epub-export-to-epub (&optional async subtreep visible-only ext-plist)
@@ -403,35 +435,15 @@ SUBTREEP supports narrowing of the document, VISIBLE-ONLY allows
 you to export only visible parts of the document, EXT-PLIST is
 the property list for the export process."
   (interactive)
-  (let* ((outfile (org-export-output-file-name ".epub" subtreep))
-	 (out-file-type (file-name-extension outfile))
-	 (org-epub-image-counter 0)
-	 (org-epub-image-list nil)
-	 (org-epub-cover nil)
-	 (org-epub-cover-img nil)
-	 (org-epub-zip-dir (file-name-as-directory
-			    (make-temp-file (format "%s-" out-file-type) t)))
-	 (body (org-export-as 'epub subtreep visible-only nil ext-plist)))
-    (with-current-buffer (find-file (concat org-epub-zip-dir "META-INF/container.xml"))
-      (erase-buffer)
-      (insert (org-epub-template-container))
-      (unless (file-exists-p (concat org-epub-zip-dir "META-INF"))
-	(make-directory (concat org-epub-zip-dir "META-INF")))
-      (save-buffer 0)
-      (kill-buffer))
-    (with-current-buffer (find-file (concat org-epub-zip-dir "mimetype"))
-      (erase-buffer)
-      (insert (org-epub-template-mimetype))
-      (save-buffer 0)
-      (kill-buffer))
-    (with-current-buffer (find-file (concat org-epub-zip-dir "body.html"))
-      (erase-buffer)
-      (insert body)
-      (save-buffer 0)
-      (kill-buffer))
-    (org-epub-zip-it-up outfile '("body.html" "style.css") org-epub-zip-dir)
-    (message "Generated %s" outfile)
-    (expand-file-name outfile)))
+  (let* ((outfile (org-export-output-file-name ".epub" subtreep)))
+    (if async
+	(org-export-async-start (lambda (f) (org-export-add-to-stack f 'odt))
+	  (org-epub--export-wrapper
+	   outfile
+	   (org-export-as 'epub subtreep visible-only nil ext-plist)))
+      (org-epub--export-wrapper
+       outfile
+       (org-export-as 'epub subtreep visible-only nil ext-plist)))))
 
 (defun org-epub-template-toc-ncx (uid toc-depth title toc-nav)
   "Create the toc.ncx file.
