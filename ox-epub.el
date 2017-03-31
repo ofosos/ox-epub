@@ -284,7 +284,7 @@ If it needs to be copied return a pair (sourcefile . targetfile)."
   (let ((val))
     (dolist (el org-epub-manifest val)
       (when (funcall pred el)
-	(return-from org-epub-manifest-first el)))))
+	(cl-return-from org-epub-manifest-first el)))))
 
 ;; core
 
@@ -330,7 +330,7 @@ holding export options."
 		(org-export-collect-headlines info 2)))
   (let ((styles (org-split-string (or (plist-get org-epub-metadata :epub-style) " "))))
     (mapc #'(lambda (style)
-	      (let* ((stylenum (incf org-epub-style-counter))
+	      (let* ((stylenum (cl-incf org-epub-style-counter))
 		     (stylename (concat "style-" (format "%d" stylenum)))
 		     (stylefile (concat stylename ".css")))
 		(push (org-epub-manifest-entry stylename stylefile 'stylesheet "text/css" style) org-epub-manifest)))
@@ -419,7 +419,7 @@ holding export options."
 	 (save-buffer 0)
 	 (kill-buffer)
 	 (push (org-epub-manifest-entry "default-style" "style.css" 'stylesheet "text/css") org-epub-manifest)))
-     (when (plist-get org-epub-metadata :epub-cover)
+     (when (org-string-nw-p (plist-get org-epub-metadata :epub-cover))
        (let* ((cover-path (plist-get org-epub-metadata :epub-cover))
 	      (cover-type (file-name-extension cover-path))
 	      (cover-img (create-image (expand-file-name cover-path)))
