@@ -9,6 +9,8 @@ relatiely easy to convert the resulting =.epub= to a =.mobi= (Kindle).
 This depends on Emacs 24.3 and OrgMode 9, it won't work on OrgMode 8 or
 any version of Emacs before 24.3.
 
+You will also need a working version of the =zip= utility.
+
 ** Installation
 
 =M-x package-install RET ox-epub RET=
@@ -44,12 +46,13 @@ The only other option that is exported:
 
 Currently =ox-epub= can do the following:
 
- - simple cover images (broken)
+ - simple cover images
  - exports png and jpg images
  - direct =.epub= generation
+ - add stylesheets to your liking: Use the EPUBSTYLE property to add a
+   list of stylesheets and customize =html-head-include-default-style=
+   to toggle inclusion of the default stylesheet.
 
 ** Caveats
 
-These will eventually be fixed:
-
- - Stylesheets not implemented.
+None at the moment.
