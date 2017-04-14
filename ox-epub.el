@@ -359,7 +359,6 @@ holding export options."
 	   ">\n")
    
    "<head>\n"
-   (org-html--build-meta-info info)
    (when (plist-get info :html-head-include-default-style)
      "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/>\n")
    (when (plist-get info :epub-style)
