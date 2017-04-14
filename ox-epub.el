@@ -45,6 +45,8 @@
 (require 'ox-html)
 (require 'org-element)
 
+org-export-options-alist
+
 (org-export-define-derived-backend 'epub 'html
   :options-alist
   '((:epub-uid "UID" nil nil t)
@@ -53,7 +55,8 @@
     (:epub-publisher "Publisher" nil nil t)
     (:epub-rights "License" nil nil t)
     (:epub-style "EPUBSTYLE" nil nil t)
-    (:epub-cover "EPUBCOVER" nil nil t))
+    (:epub-cover "EPUBCOVER" nil nil t)
+    (:html-doctype "HTML_DOCTYPE" nil "xhtml" t))
     
   :translate-alist
   '((template . org-epub-template)
@@ -359,6 +362,7 @@ holding export options."
 	   ">\n")
    
    "<head>\n"
+   (org-html--build-meta-info info)
    (when (plist-get info :html-head-include-default-style)
      "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/>\n")
    (when (plist-get info :epub-style)
@@ -377,21 +381,16 @@ holding export options."
    ;; Document title.
    (when (plist-get info :with-title)
      (let ((title (plist-get info :title))
-	   (subtitle (plist-get info :subtitle))
-	   (html5-fancy (org-html--html5-fancy-p info)))
+	   (subtitle (plist-get info :subtitle)))
        (when title
 	 (format
-	  (if html5-fancy
-	      "<header>\n<h1 class=\"title\">%s</h1>\n%s</header>"
-	    "<h1 class=\"title\">%s%s</h1>\n")
+	  "<h1 class=\"title\">%s%Es</h1>\n")
 	  (org-export-data title info)
 	  (if subtitle
 	      (format
-	       (if html5-fancy
-		   "<p class=\"subtitle\">%s</p>\n"
-		 "\n<br>\n<span class=\"subtitle\">%s</span>\n")
+	       "<p class=\"subtitle\">%s</p>\n"
 	       (org-export-data subtitle info))
-	    "")))))
+	    ""))))
      contents
      "</div>"
      ;   (format "</%s>\n" (nth 1 (assq 'content (plist-get info :html-divs))))
