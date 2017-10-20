@@ -292,7 +292,7 @@ holding export options."
 	   (subtitle (plist-get info :subtitle)))
        (when title
 	 (format
-	  "<h1 class=\"title\">%s%Es</h1>\n")
+	  "<h1 class=\"title\">%s%s</h1>\n")
 	  (org-export-data title info)
 	  (if subtitle
 	      (format
