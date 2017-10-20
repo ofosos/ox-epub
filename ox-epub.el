@@ -237,7 +237,7 @@ holding export options."
 		   (org-element-property :level headline)
 		   (org-export-get-reference headline info)))
 		(org-export-collect-headlines info 2)))
-  (let ((styles (org-split-string (or (plist-get org-epub-metadata :epub-style) " "))))
+  (let ((styles (split-string (or (plist-get org-epub-metadata :epub-style) " "))))
     (mapc #'(lambda (style)
 	      (let* ((stylenum (cl-incf org-epub-style-counter))
 		     (stylename (concat "style-" (format "%d" stylenum)))
