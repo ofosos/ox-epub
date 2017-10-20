@@ -45,8 +45,6 @@
 (require 'ox-html)
 (require 'org-element)
 
-org-export-options-alist
-
 (org-export-define-derived-backend 'epub 'html
   :options-alist
   '((:epub-uid "UID" nil nil t)
@@ -288,17 +286,18 @@ holding export options."
    "<div id=\"content\">"
    ;; Document title.
    (when (plist-get info :with-title)
-     (let ((title (plist-get info :title))
+     (let ((ftitle (plist-get info :title))
 	   (subtitle (plist-get info :subtitle)))
-       (when title
+       (when ftitle
+	 (message (org-export-data ftitle info))
 	 (format
-	  "<h1 class=\"title\">%s%s</h1>\n")
-	  (org-export-data title info)
+	  "<h1 class=\"title\">%s</h1>%s\n"
+	  (org-export-data ftitle info)
 	  (if subtitle
 	      (format
 	       "<p class=\"subtitle\">%s</p>\n"
 	       (org-export-data subtitle info))
-	    ""))))
+	    "")))))
      contents
      "</div>"
      ;   (format "</%s>\n" (nth 1 (assq 'content (plist-get info :html-divs))))
@@ -399,6 +398,8 @@ you to export only visible parts of the document, EXT-PLIST is
 the property list for the export process."
   (interactive)
   (let* ((outfile (org-export-output-file-name ".epub" subtreep)))
+    (message "Output to:")
+    (message outfile)
     (if async
 	(org-export-async-start (lambda (f) (org-export-add-to-stack f 'odt))
 	  (org-epub--export-wrapper
