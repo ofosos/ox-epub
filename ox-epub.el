@@ -143,11 +143,11 @@
 (defvar org-epub-zip-command "zip"
   "Command to call to create zip files.")
 
-(defvar org-epub-zip-no-compress "-Xu0"
-  "Zip command option to pass for no compression.")
+(defvar org-epub-zip-no-compress (list "-Xu0")
+  "Zip command option list to pass for no compression.")
 
-(defvar org-epub-zip-compress "-Xu9"
-  "Zip command option to pass for compression.")
+(defvar org-epub-zip-compress (list "-Xu9")
+  "Zip command option list to pass for compression.")
 
 (defvar org-epub-metadata nil
   "EPUB export metadata")
@@ -588,13 +588,13 @@ their proper place."
   (let ((default-directory target-dir)
 	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
     (call-process org-epub-zip-command nil '(:file "zip.log") nil
-		  org-epub-zip-no-compress
-		  epub-file
-		  "mimetype")
+		  (append org-epub-no-compress
+			  (list epub-file
+				"mimetype")))
     (apply 'call-process org-epub-zip-command nil '(:file "zip.log") nil
-	   org-epub-zip-compress
-	   epub-file
-	   (append meta-files (mapcar #'(lambda (el) (plist-get el :filename)) files))))
+	   (append org-epub-zip-compress
+		   (list epub-file)
+		   (append meta-files (mapcar #'(lambda (el) (plist-get el :filename)) files))))
   (copy-file (concat target-dir epub-file) default-directory t))
 
 (defun org-epub-generate-toc-single (headlines filename)
