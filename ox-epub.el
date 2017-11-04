@@ -581,21 +581,21 @@ files to process, while TARGET-DIR is the directory where
 exported HTML files live. This function will copy any files into
 their proper place."
   (mapc #'(lambda (entry)
-	    (let ((copy (org-epub-manifest-needcopy entry)))
-	      (when copy
-		(copy-file (car copy) (concat target-dir (cdr copy)) t))))
-	files)
+	          (let ((copy (org-epub-manifest-needcopy entry)))
+	            (when copy
+		            (copy-file (car copy) (concat target-dir (cdr copy)) t))))
+	      files)
   (let ((default-directory target-dir)
-	(meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
+	      (meta-files '("META-INF/container.xml" "content.opf" "toc.ncx")))
     (call-process org-epub-zip-command nil '(:file "zip.log") nil
-		  (append org-epub-no-compress
-			  (list epub-file
-				"mimetype")))
+		              (append org-epub-no-compress
+			                    (list epub-file
+				                        "mimetype")))
     (apply 'call-process org-epub-zip-command nil '(:file "zip.log") nil
-	   (append org-epub-zip-compress
-		   (list epub-file)
-		   (append meta-files (mapcar #'(lambda (el) (plist-get el :filename)) files))))
-  (copy-file (concat target-dir epub-file) default-directory t))
+	         (append org-epub-zip-compress
+		               (list epub-file)
+		               (append meta-files (mapcar #'(lambda (el) (plist-get el :filename)) files))))
+    (copy-file (concat target-dir epub-file) default-directory t)))
 
 (defun org-epub-generate-toc-single (headlines filename)
   "Generate a single file TOC.
