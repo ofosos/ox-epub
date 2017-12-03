@@ -1,4 +1,4 @@
-#+TITLE: Sample document
+#+TITLE: ox-epub Sample document
 #+UID: http://ofosos.org/epub/sample.org
 #+DATE: 2017-12-02
 #+AUTHOR: Mark Meyer
@@ -25,20 +25,32 @@ not be an ordinary day. At least not for him.
 
 160 words.
 
-* Tables
+* A Table
 
 This is a simple data table:
 
+#+CAPTION: This is a table
+#+NAME:   fig:some-table
 | foo | bar | baz | quux | quix |
 |-----+-----+-----+------+------|
 |  13 |   7 |   5 |    3 |    1 |
 |   1 |   3 |   5 |    7 |   13 |
 
-* Images examples
+* An Image
 
+#+CAPTION: This is the org-mode logo
+#+NAME:   fig:unicorn
+[[./org-mode-unicorn-logo.png]]
 
+* Some Code
 
-* Math example
+#+BEGIN_SRC emacs-lisp
+(defun org-xor (a b)
+  "Exclusive or."
+  (if a (not b) b))
+#+END_SRC
+
+* Some Math
 
 \begin{equation}
 x=\sqrt{b}
