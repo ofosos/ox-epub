@@ -17,6 +17,8 @@ You will also need a working version of the =zip= utility.
 
 ** Usage
 
+See the =sample= directory for a sample of what ox-epub can do.
+
 Hit =C-c C-e E e= to publish the current buffer to an EPUB.
 
 There are some required export options that need to be set. These are
@@ -47,7 +49,8 @@ The only other option that is exported:
 Currently =ox-epub= can do the following:
 
  - simple cover images
- - exports png and jpg images
+ - inclusion of png and jpg images
+ - export of mathematical formulas
  - direct =.epub= generation
  - add stylesheets to your liking: Use the EPUBSTYLE property to add a
    list of stylesheets and customize =html-head-include-default-style=
@@ -55,4 +58,5 @@ Currently =ox-epub= can do the following:
 
 ** Caveats
 
-None at the moment.
+ - Mathematical formulas only export well if you use the =dvipng=
+   backend. =dvipng= should be included in TeXlive.
