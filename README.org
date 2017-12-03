@@ -1,5 +1,5 @@
-[[https://travis-ci.org/ofosos/ox-epub.svg?branch=master][https://travis-ci.org/ofosos/ox-epub]]
-[[http://stable.melpa.org/packages/ox-epub-badge.svg][http://stable.melpa.org/#/ox-epub]]
+[[https://travis-ci.org/ofosos/ox-epub.svg?branch=master]]
+[[http://stable.melpa.org/packages/ox-epub-badge.svg]]
 
 
 * ox-epub
