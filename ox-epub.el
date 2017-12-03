@@ -58,7 +58,9 @@
     
   :translate-alist
   '((template . org-epub-template)
-    (link . org-epub-link))
+    (link . org-epub-link)
+    (latex-environment . org-epub--latex-environment)
+    (latex-fragment . org-epub--latex-fragment))
   :menu-entry
   '(?E "Export to Epub"
        ((?e "As Epub file" org-epub-export-to-epub)
@@ -205,6 +207,55 @@ If it needs to be copied return a pair (sourcefile . targetfile)."
 	(cl-return-from org-epub-manifest-first el)))))
 
 ;; core
+
+;;; Latex Environment - stolen from ox-html
+
+(defun org-epub--latex-environment (latex-environment _contents info)
+  "Transcode a LATEX-ENVIRONMENT element from Org to HTML.
+CONTENTS is nil.  INFO is a plist holding contextual information."
+  (let ((processing-type (plist-get info :with-latex))
+	(latex-frag (org-remove-indentation
+		     (org-element-property :value latex-environment)))
+	(attributes (org-export-read-attribute :attr_html latex-environment)))
+    (cond
+     ((assq processing-type org-preview-latex-process-alist)
+      (let ((formula-link
+	     (org-html-format-latex latex-frag processing-type info)))
+	(when (and formula-link (string-match "file:\\([^]]*\\)" formula-link))
+	  ;; Do not provide a caption or a name to be consistent with
+	  ;; `mathjax' handling.
+	  (org-html--wrap-image
+	   (org-html--format-image
+	    (let* ((path (match-string 1 formula-link))
+		   (ref (org-export-get-reference latex-environment info))
+		   (mime (file-name-extension path))
+		   (name (concat "img-" ref "." mime)))
+	      (message "Formatting Latex environment: %s" name)
+	      (push (org-epub-manifest-entry ref name 'img (concat "image/" mime) path) org-epub-manifest)
+	      name) attributes info) info))))
+     (t latex-frag))))
+
+;;;; Latex Fragment - stolen from ox-html
+
+(defun org-epub--latex-fragment (latex-fragment _contents info)
+  "Transcode a LATEX-FRAGMENT object from Org to HTML.
+CONTENTS is nil.  INFO is a plist holding contextual information."
+  (let ((latex-frag (org-element-property :value latex-fragment))
+	(processing-type (plist-get info :with-latex)))
+    (cond
+     ((assq processing-type org-preview-latex-process-alist)
+      (let ((formula-link
+	     (org-html-format-latex latex-frag processing-type info)))
+	(when (and formula-link (string-match "file:\\([^]]*\\)" formula-link))
+	  (let* ((path (match-string 1 formula-link))
+		 (ref (org-export-get-reference latex-fragment info))
+		 (mime (file-name-extension path))
+		 (name (concat "img-" ref "." mime)))
+	    (message "Formatting Latex fragement: %s" name)
+	    (push (org-epub-manifest-entry ref name 'img (concat "image/" mime) path) org-epub-manifest)
+	    (org-html--format-image name nil info)))))
+     (t latex-frag))))
+
 
 (defun org-epub-link (link desc info)
   "Return the HTML required for a link descriped by LINK, DESC, and INFO.
