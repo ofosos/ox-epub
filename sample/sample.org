@@ -1,0 +1,48 @@
+#+TITLE: Sample document
+#+UID: http://ofosos.org/epub/sample.org
+#+DATE: 2017-12-02
+#+AUTHOR: Mark Meyer
+#+OPTIONS: tex:dvipng
+
+* Text
+
+He felt deeply sorry for getting up. Waddling in his self pity he
+poured coffee into the filter, then paused for the water to heat
+up. His eyes were half closed. He felt nothing, besides the ugly
+morning suffocating his consciousness.
+
+He came to his senses slowly. When he was ready to depart from his
+flat, he packed an umbrella and a jacket, preparing for the
+rain. Technically it was summer, but it had been raining every day for
+the last 5 weeks. The farmers wouldn't be happy about this
+summer. Agriculture was unpredictable and this summer would turn out
+in a way, that nobody would have wanted to predict anyways.
+
+He made his way to the Y-intersection, slowly moving in the direction
+of the subway station, that would take him to work on an ordinary
+day. Suffice it to say, that the day he entered the newspapers would
+not be an ordinary day. At least not for him.
+
+160 words.
+
+* Tables
+
+This is a simple data table:
+
+| foo | bar | baz | quux | quix |
+|-----+-----+-----+------+------|
+|  13 |   7 |   5 |    3 |    1 |
+|   1 |   3 |   5 |    7 |   13 |
+
+* Images examples
+
+
+
+* Math example
+
+\begin{equation}
+x=\sqrt{b}
+\end{equation}
+
+If $a^2=b$ and \( b=2 \), then the solution must be
+either $$ a=+\sqrt{2} $$ or \[ a=-\sqrt{2} \].
