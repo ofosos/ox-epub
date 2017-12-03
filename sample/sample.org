@@ -4,6 +4,8 @@
 #+AUTHOR: Mark Meyer
 #+OPTIONS: tex:dvipng
 
+# The code snippet below requires htmlize!
+
 * Text
 
 He felt deeply sorry for getting up. Waddling in his self pity he
@@ -43,6 +45,8 @@ This is a simple data table:
 [[./org-mode-unicorn-logo.png]]
 
 * Some Code
+
+# This requires htmlize
 
 #+BEGIN_SRC emacs-lisp
 (defun org-xor (a b)
