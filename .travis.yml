@@ -11,7 +11,7 @@ env:
   - EVM_EMACS=emacs-25.2-travis
   - EVM_EMACS=emacs-25.3-travis
 script:
-  - git clone --depth 1 git://orgmode.org/org-mode.git
+  - git clone --depth 1 https://code.orgmode.org/bzg/org-mode.git
   - (cd org-mode && make autoloads)
   - emacs --version
   - emacs -q -no-site-file -no-init-file --eval "(add-to-list 'load-path \"./org-mode/lisp\")(require 'org)" -batch -f batch-byte-compile ox-epub.el
