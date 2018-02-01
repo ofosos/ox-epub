@@ -1,3 +1,7 @@
+[[https://travis-ci.org/ofosos/ox-epub.svg?branch=master]]
+[[http://stable.melpa.org/packages/ox-epub-badge.svg]]
+
+
 * ox-epub
 
 Generate =.epub= files directly from OrgMode. This will export EPUB
@@ -12,6 +16,8 @@ any version of Emacs before 24.3.
 You will also need a working version of the =zip= utility.
 
 ** Installation
+
+If you have MELPA stable activated, it is as simple as this:
 
 =M-x package-install RET ox-epub RET=
 
