@@ -1,6 +1,6 @@
 ;;; ox-epub.el --- Export org mode projects to EPUB -*- lexical-binding: t; -*-
 
-;; Copyright (c) 2017 - Mark Meyer
+;; Copyright (c) 2017-2018 - Mark Meyer
 
 ;; Author: Mark Meyer <mark@ofosos.org>
 ;; Maintainer: Mark Meyer <mark@ofosos.org>
@@ -262,7 +262,7 @@ CONTENTS is nil.  INFO is a plist holding contextual information."
 
 See org-html-link for more info."
   (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
-    (let* ((path (org-element-property :path link))
+    (let* ((path (org-link-unescape (org-element-property :path link)))
 	   (ref (org-export-get-reference link info))
 	   (mime (file-name-extension path))
 	   (name (concat "img-" ref "." mime)))
