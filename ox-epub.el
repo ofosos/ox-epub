@@ -261,7 +261,7 @@ CONTENTS is nil.  INFO is a plist holding contextual information."
   "Return the HTML required for a link descriped by LINK, DESC, and INFO.
 
 See org-html-link for more info."
-  (when (and (not desc) (org-export-inline-image-p link (plist-get info :html-inline-image-rules)))
+  (when (org-export-inline-image-p link (plist-get info :html-inline-image-rules))
     (let* ((path (org-link-unescape (org-element-property :path link)))
 	   (ref (org-export-get-reference link info))
 	   (mime (file-name-extension path))
