@@ -42,6 +42,9 @@ Furthermore there are some properties which are optional:
  - =Publisher= the publisher of the book
  - =License= the rights associated with this book, the copyright
    notice and further rights may be included in this option.
+ - =EPUBCOVER= the cover image to use for the export
+ - =EPUBSTYLE= the CSS file to use for the export, this is set by default
+   but can be set on a per document basis
 
 The only other option that is exported:
 
