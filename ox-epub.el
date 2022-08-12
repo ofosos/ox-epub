@@ -8,7 +8,7 @@
 ;; URL: http://github.com/ofosos/org-epub
 ;; Keywords: hypermedia
 
-;; Version: 0.1.0
+;; Version: 0.1.1
 
 ;; Package-Requires: ((emacs "24.3") (org "9"))
 
@@ -413,7 +413,8 @@ holding export options."
 	   (with-current-buffer (find-file (concat org-epub-zip-dir "mimetype"))
 	     (erase-buffer)
 	     (insert (org-epub-template-mimetype))
-	     (save-buffer 0)
+	     (let ((require-final-newline nil))
+	       (save-buffer 0))
 	     (kill-buffer))
 	   (with-current-buffer (find-file (concat org-epub-zip-dir "body.html"))
 	     (erase-buffer)
